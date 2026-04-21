@@ -1,3 +1,4 @@
+// src/lib/utils.ts
 export function formatPrice(amount: number): string {
   return new Intl.NumberFormat('es-AR', {
     style: 'currency',

@@ -1,36 +1,88 @@
+// src/components/products/ProductModal.tsx
 'use client'
-import { useStore } from '@/lib/store'
-import { products, WA_NUMBER } from '@/lib/data'
-import { buildWhatsAppURL } from '@/lib/utils'
-import { X } from 'lucide-react'
+
+import { useEffect } from 'react'
+import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks'
+import { closeModal } from '@/lib/redux/slices/uiSlice'
+import { useGetProductoPorIdQuery } from '@/lib/redux/api/productsApi'
+import { ProductDetailClient } from './ProductDetailClient'
+import { X, Loader2 } from 'lucide-react'
 
 export function ProductModal() {
-  const { selectedProductId, closeModal } = useStore()
-  const product = products.find((p) => p.id === selectedProductId)
+  const dispatch = useAppDispatch()
+  const selectedId = useAppSelector((s) => s.ui.selectedProductId)
 
-  if (!product) return null
+  const { data: product, isLoading } = useGetProductoPorIdQuery(selectedId!, {
+    skip: selectedId === null,
+  })
+
+  // 1. Manejo de Accesibilidad y UX (Tecla ESC y Bloqueo de Scroll)
+  useEffect(() => {
+    if (!selectedId) return
+
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') dispatch(closeModal())
+    }
+
+    window.addEventListener('keydown', handleEsc)
+    // Bloquea el scroll de la página de fondo cuando el modal se abre
+    document.body.style.overflow = 'hidden' 
+
+    return () => {
+      window.removeEventListener('keydown', handleEsc)
+      // Restaura el scroll al cerrar
+      document.body.style.overflow = 'unset' 
+    }
+  }, [selectedId, dispatch])
+
+  if (!selectedId) return null
 
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4"
-      onClick={closeModal}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      // Agregado backdrop-blur para dar más profundidad y foco al modal
+      className="fixed inset-0 z-200 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all"
+      onClick={() => dispatch(closeModal())}
     >
       <div
-        className="bg-white rounded-2xl max-w-md w-full p-6 relative"
+        className="bg-background rounded-t-2xl sm:rounded-2xl w-full sm:max-w-5xl max-h-[90dvh] flex flex-col shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={closeModal} className="absolute top-4 right-4 text-[--text-muted] hover:text-[--text-primary]">
-          <X size={20} />
-        </button>
-        {/* contenido del modal... */}
-        <a
-          href={buildWhatsAppURL(WA_NUMBER, product.name)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 flex items-center justify-center gap-2 bg-[#25D366] text-white rounded-xl py-3 font-semibold"
-        >
-          Consultar por WhatsApp
-        </a>
+        {/* Header del modal - shrink-0 evita que el header colapse si hay mucho contenido */}
+        <div className="sticky top-0 z-10 flex items-center justify-between bg-background px-4 py-3 border-b border-border shrink-0 sm:rounded-t-2xl">
+          <h2 id="modal-title" className="text-sm font-semibold text-foreground">
+            Detalle del producto
+          </h2>
+          <button
+            onClick={() => dispatch(closeModal())}
+            aria-label="Cerrar modal"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Contenedor scrolleable aislado */}
+        <div className="overflow-y-auto w-full">
+          {/* 2. Estado de Carga explícito */}
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-32 text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
+              <p className="text-sm font-medium">Cargando detalles...</p>
+            </div>
+          ) : product ? (
+            <ProductDetailClient
+              slug={product.slug ?? String(product.id)}
+              initialData={product}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <p>No se pudo cargar la información del producto.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

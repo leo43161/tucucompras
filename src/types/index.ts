@@ -1,18 +1,12 @@
-export interface Product {
-  id: number
-  brand: string
-  name: string
-  desc: string
-  price: number
-  sale: boolean
-  img: string
-  category: 'Hombre' | 'Mujer' | 'Unisex' | 'Niños' | 'Deporte'
-}
-
+import type { ProductoAPI, EmpresaAPI, CategoriaAPI } from '@/lib/redux/api/types'
 export interface FilterState {
   categories: string[]
   priceRange: [number, number]
   onlyOffers: boolean
+  sortBy: string
 }
 
 export type ViewMode = 'list' | 'grid'
+export type Product = ProductoAPI
+export type Empresa = EmpresaAPI
+export type Categoria = CategoriaAPI
