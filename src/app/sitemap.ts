@@ -1,38 +1,46 @@
-// src/app/sitemap.ts
-// NOTA: Con output:'export' este archivo genera /out/sitemap.xml en build
+import type { MetadataRoute } from 'next'
 import { API_BASE_URL } from '@/lib/config'
+import type { CategoriaAPI, ProductosFrontResponse } from '@/lib/redux/api/types'
 
-export default async function sitemap() {
-  const baseUrl = 'https://tucucompras.com.ar'
+const BASE_URL = 'https://tucucompras.com.ar'
 
-  try {
-    const [productos, categorias, empresas] = await Promise.all([
-      fetch(`${API_BASE_URL}/productos?fields=slug,fecha_creacion`).then((r) =>
-        r.json()
-      ),
-      fetch(`${API_BASE_URL}/categorias?fields=slug`).then((r) => r.json()),
-      fetch(`${API_BASE_URL}/empresas?fields=id`).then((r) => r.json()),
-    ])
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [productos, categorias] = await Promise.all([
+    fetch(`${API_BASE_URL}/obtenerProductosFront?limite=10000&offset=0`)
+      .then(async (r) => (r.ok ? ((await r.json()) as ProductosFrontResponse).data ?? [] : []))
+      .catch(() => [] as ProductosFrontResponse['data']),
+    fetch(`${API_BASE_URL}/listar_categorias`)
+      .then((r) => r.ok ? r.json() : { data: [] })
+      .then((j) => (j?.data ?? []) as CategoriaAPI[])
+      .catch(() => [] as CategoriaAPI[]),
+  ])
 
-    const productUrls = productos.map((p: { slug: string; fecha_creacion: string }) => ({
-      url: `${baseUrl}/productos/${p.slug}`,
-      lastModified: new Date(p.fecha_creacion),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }))
+  const productUrls: MetadataRoute.Sitemap = productos.map((p) => ({
+    url: `${BASE_URL}/productos/${p.id}`,
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }))
 
-    const categoryUrls = categorias.map((c: { slug: string }) => ({
-      url: `${baseUrl}/categorias/${c.slug}`,
-      changeFrequency: 'daily' as const,
+  const categoryUrls: MetadataRoute.Sitemap = categorias
+    .filter((c) => !!c.slug)
+    .map((c) => ({
+      url: `${BASE_URL}/categorias/${c.slug}`,
+      changeFrequency: 'daily',
       priority: 0.7,
     }))
 
-    return [
-      { url: baseUrl, changeFrequency: 'daily' as const, priority: 1.0 },
-      ...categoryUrls,
-      ...productUrls,
-    ]
-  } catch {
-    return [{ url: baseUrl, priority: 1.0 }]
-  }
+  const empresaIds = new Set<number>()
+  for (const p of productos) if (p.empresa?.id) empresaIds.add(p.empresa.id)
+  const empresaUrls: MetadataRoute.Sitemap = [...empresaIds].map((id) => ({
+    url: `${BASE_URL}/empresas/${id}`,
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  }))
+
+  return [
+    { url: BASE_URL, changeFrequency: 'daily', priority: 1.0 },
+    ...categoryUrls,
+    ...empresaUrls,
+    ...productUrls,
+  ]
 }

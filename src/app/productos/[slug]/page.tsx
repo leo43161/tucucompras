@@ -1,103 +1,81 @@
-// src/app/productos/[slug]/page.tsx
-import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { ProductDetailClient } from '@/components/products/ProductDetailClient'
 import { API_BASE_URL } from '@/lib/config'
-import type { Product } from '@/types'
+import type { ProductoAPI, ProductosFrontResponse } from '@/lib/redux/api/types'
 
-// Con output: 'export', esto corre en BUILD TIME
-// Next.js genera una carpeta /out/productos/[slug]/index.html por cada producto
-export async function generateStaticParams() {
+async function fetchAllProducts(): Promise<ProductoAPI[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/productos?fields=slug`)
-    const data = await res.json()
-    return data.map((p: { slug: string }) => ({ slug: p.slug }))
+    const res = await fetch(`${API_BASE_URL}/obtenerProductosFront?limite=10000&offset=0`, { cache: 'no-store' })
+    if (!res.ok) return []
+    const data: ProductosFrontResponse = await res.json()
+    return data?.data ?? []
   } catch {
-    // Si el API no está disponible en build, retornamos vacío
-    // Los productos se pueden cargar client-side como fallback
     return []
   }
 }
 
-// Metadata dinámica por producto — fundamental para SEO
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}): Promise<Metadata> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/productos/${params.slug}`)
-    const product: Product = await res.json()
+// Con output: 'export', generateStaticParams corre en build time.
+// El "slug" es el id del producto (la DB no tiene campo slug en productos).
+export async function generateStaticParams() {
+  const products = await fetchAllProducts()
+  return products.map((p) => ({ slug: String(p.id) }))
+}
 
-    return {
-      title: `${product.nombre} | TucuCompras`,
-      description: product.descripcion,
-      openGraph: {
-        title: product.nombre,
-        description: product.descripcion || '',
-        images: product.imagen_principal_url ? [{ url: product.imagen_principal_url }] : [],
-        locale: 'es_AR',
-        type: 'website',
-      },
-      // Keywords locales — clave para búsquedas en Tucumán
-      keywords: [
-        product.nombre,
-        product.empresa?.nombre || '',
-        'comprar en Tucumán',
-        'productos Tucumán',
-        `${product.categoria} Tucumán`,
-      ],
-    }
-  } catch {
-    return { title: 'Producto | TucuCompras' }
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const products = await fetchAllProducts()
+  const product = products.find((p) => String(p.id) === slug)
+  if (!product) return { title: 'Producto | TucuCompras' }
+  return {
+    title: `${product.nombre} | TucuCompras`,
+    description: product.descripcion ?? `${product.nombre} en ${product.empresa?.nombre ?? 'TucuCompras'}`,
+    openGraph: {
+      title: product.nombre,
+      description: product.descripcion ?? '',
+      images: product.imagen_principal_url ? [{ url: product.imagen_principal_url }] : [],
+      locale: 'es_AR',
+      type: 'website',
+    },
+    keywords: [
+      product.nombre,
+      product.empresa?.nombre ?? '',
+      'comprar en Tucumán',
+      product.categoria?.nombre ? `${product.categoria.nombre} Tucumán` : '',
+    ].filter(Boolean) as string[],
   }
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
-  let product: Product | null = null
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const id = Number(slug)
+  const products = await fetchAllProducts()
+  const product = products.find((p) => p.id === id) ?? null
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/productos/${params.slug}`)
-    if (!res.ok) notFound()
-    product = await res.json()
-  } catch {
-    // Con static export no hay notFound() en runtime, pero sí en build
-  }
-
-  if (!product) notFound()
-
-  // JSON-LD — le dice a Google exactamente qué es este producto
-  const jsonLd = {
+  const jsonLd = product && {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    nombre: product.nombre,
+    name: product.nombre,
     description: product.descripcion,
     image: product.imagen_principal_url,
-    brand: { '@type': 'Brand', nombre: product.empresa?.nombre || 'TucuCompras' },
+    brand: { '@type': 'Brand', name: product.empresa?.nombre ?? 'TucuCompras' },
     offers: {
       '@type': 'Offer',
       priceCurrency: 'ARS',
-      price: product.precio_oferta
-        ? Math.round(product.precio_oferta * 0.85)
-        : product.precio,
+      price: product.es_oferta && product.precio_oferta ? product.precio_oferta : product.precio,
       availability: 'https://schema.org/InStock',
-      seller: { '@type': 'Organization', nombre: 'TucuCompras' },
+      seller: { '@type': 'Organization', name: 'TucuCompras' },
     },
   }
 
   return (
     <>
-      {/* JSON-LD inyectado en el HTML estático — Google lo lee */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      {/* El resto puede ser client component con RTK Query */}
-      <ProductDetailClient slug={params.slug} initialData={product} />
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <ProductDetailClient id={id} initialData={product} />
     </>
   )
 }

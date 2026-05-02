@@ -82,7 +82,7 @@ export function ProductModal() {
             </div>
           ) : product ? (
             <ProductDetailClient
-              slug={String(product.id)}
+              id={product.id}
               initialData={product}
             />
           ) : (
