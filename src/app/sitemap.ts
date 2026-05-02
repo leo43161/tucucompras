@@ -2,6 +2,8 @@ import type { MetadataRoute } from 'next'
 import { API_BASE_URL } from '@/lib/config'
 import type { CategoriaAPI, ProductosFrontResponse } from '@/lib/redux/api/types'
 
+export const dynamic = 'force-static'
+
 const BASE_URL = 'https://tucucompras.com.ar'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
