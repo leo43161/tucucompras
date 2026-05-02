@@ -11,7 +11,7 @@ export default function HomePage() {
     <>
       <Navbar />
       <Head>
-        <link rel="icon" href="/ico/favicon-32x32.png" />
+        <link rel="icon" href="/ico/favicon.ico" />
       </Head>
       <SectionTabs />
       <div className="max-w-7xl mx-auto flex">
