@@ -1,185 +1,102 @@
-// src/components/products/ProductCard.tsx
 'use client'
-
 import Image from 'next/image'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, Tag } from 'lucide-react'
 import { formatPrice, buildWhatsAppURL } from '@/lib/utils'
 import { useAppDispatch } from '@/lib/redux/hooks'
 import { openModal } from '@/lib/redux/slices/uiSlice'
+import { useRegistrarClickMutation, useRegistrarLeadMutation } from '@/lib/redux/api/productsApi'
+import { buildImgUrl } from '@/lib/config'
 import type { Product } from '@/types'
 
-interface Props {
-  product: Product
-  view: 'list' | 'grid'
-}
-
-function PriceBlock({
-  price,
-  discPrice,
-  sale,
-  isGrid = false,
-}: {
-  price: number
-  discPrice: number
-  sale: boolean
-  isGrid?: boolean
-}) {
-  if (sale) {
-    return (
-      <div className="flex flex-col">
-        <span className="text-xs text-muted-foreground line-through leading-none">
-          {formatPrice(price)}
-        </span>
-        <span className={`font-bold text-destructive leading-tight ${isGrid ? 'text-base' : 'text-lg'}`}>
-          {formatPrice(discPrice)}
-        </span>
-      </div>
-    )
-  }
-  return (
-    <span className={`font-bold text-foreground ${isGrid ? 'text-base' : 'text-lg'}`}>
-      {formatPrice(price)}
-    </span>
-  )
-}
-
-function ConsultButton({
-  productName,
-  whatsapp,
-  compact = false,
-}: {
-  productName: string
-  whatsapp: string
-  compact?: boolean
-}) {
-  return (
-    <a
-      href={buildWhatsAppURL(whatsapp, productName)}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      className={`flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-semibold rounded-full transition-colors ${
-        compact ? 'text-[11px] px-3 py-1.5 w-full mt-2' : 'text-[13px] px-4 py-2'
-      }`}
-      aria-label={`Consultar por ${productName} en WhatsApp`}
-    >
-      <MessageCircle size={compact ? 13 : 15} />
-      {compact ? 'Consultar' : 'Consultar por WA'}
-    </a>
-  )
-}
+interface Props { product: Product; view: 'list' | 'grid' }
 
 export function ProductCard({ product, view }: Props) {
   const dispatch = useAppDispatch()
-  
-  // Lógica de precios segura
-  const finalPrice = product.es_oferta && product.precio_oferta ? product.precio_oferta : product.precio
-  const whatsapp = product.empresa?.whatsapp_contacto ?? '5493815550000'
-  
-  // Cálculo real del porcentaje de descuento
-  const hasRealDiscount = product.es_oferta && finalPrice < product.precio
-  const discountPercentage = hasRealDiscount 
-    ? Math.round(((product.precio - finalPrice) / product.precio) * 100) 
-    : 0
+  const [registrarClick] = useRegistrarClickMutation()
+  const [registrarLead] = useRegistrarLeadMutation()
 
-  const handleCardClick = () => {
-    console.log('Click en tarjeta de producto:', product.id)
-    dispatch(openModal(product.id))}
+  const precio = Number(product.precio) || 0
+  const precioOferta = Number(product.precio_oferta) || 0
+  const hasOffer = !!product.es_oferta && precioOferta > 0 && precioOferta < precio
+  const finalPrice = hasOffer ? precioOferta : precio
+  const discount = hasOffer ? Math.round(((precio - finalPrice) / precio) * 100) : 0
+  const showPrice = finalPrice > 0
+  const wa = product.empresa?.whatsapp_contacto ?? ''
+  const img = buildImgUrl(product.imagen_principal_url) ?? 'https://placehold.co/400x400/eee/aaa?text=Sin+imagen'
 
-  if (view === 'list') {
-    return (
-      <article
-        role="button"
-        tabIndex={0}
-        onClick={handleCardClick}
-        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleCardClick()}
-        className="group flex gap-4 bg-card rounded-2xl border border-border p-4 cursor-pointer hover:shadow-md hover:border-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-      >
-        {/* Imagen */}
-        <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] rounded-xl overflow-hidden shrink-0 bg-muted">
-          <Image
-            src={product.imagen_principal_url ?? 'https://placehold.co/120x120'}
-            alt={`Imagen de ${product.nombre}`}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          {hasRealDiscount && discountPercentage > 0 && (
-            <span className="absolute top-2 left-2 bg-destructive text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-              {discountPercentage}% OFF
-            </span>
-          )}
-        </div>
-
-        {/* Info */}
-        <div className="flex flex-col flex-1 justify-between py-0.5">
-          <div>
-            <p className="text-[10px] sm:text-[11px] font-bold text-primary uppercase tracking-wider">
-              {product.empresa?.nombre ?? 'Tienda local'}
-            </p>
-            <h3 className="text-sm sm:text-base font-semibold text-foreground mt-0.5 line-clamp-2 leading-snug">
-              {product.nombre}
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 hidden sm:-webkit-box">
-              {product.descripcion}
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mt-2 gap-2 sm:gap-0">
-            <PriceBlock
-              price={product.precio}
-              discPrice={finalPrice}
-              sale={hasRealDiscount}
-            />
-            <div className="self-start sm:self-end">
-              <ConsultButton productName={product.nombre} whatsapp={whatsapp} />
-            </div>
-          </div>
-        </div>
-      </article>
-    )
+  const handleOpen = () => {
+    registrarClick({ producto_id: product.id })
+    dispatch(openModal(product.id))
+  }
+  const handleWA = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    registrarLead({ producto_id: product.id, tipo_lead: 'whatsapp' })
   }
 
-  // Vista grid
+  const isGrid = view === 'grid'
+
   return (
     <article
       role="button"
       tabIndex={0}
-      onClick={handleCardClick}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleCardClick()}
-      className="group flex flex-col bg-card rounded-2xl border border-border p-3 cursor-pointer hover:shadow-md hover:border-primary/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary h-full"
+      onClick={handleOpen}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleOpen()}
+      className={`group relative bg-card border border-border rounded-2xl cursor-pointer hover:border-primary/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary overflow-hidden ${
+        isGrid ? 'flex flex-col' : 'flex gap-4 p-4'
+      }`}
     >
-      {/* Imagen */}
-      <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-muted mb-3">
+      <div className={`relative shrink-0 overflow-hidden bg-muted ${isGrid ? 'w-full aspect-square' : 'w-24 h-24 sm:w-28 sm:h-28 rounded-xl'}`}>
         <Image
-          src={product.imagen_principal_url ?? 'https://placehold.co/200x200'}
-          alt={`Imagen de ${product.nombre}`}
+          src={img}
+          alt={product.nombre}
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-300"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          sizes={isGrid ? '(max-width: 768px) 50vw, 25vw' : '120px'}
         />
-        {hasRealDiscount && discountPercentage > 0 && (
-          <span className="absolute top-2 left-2 bg-destructive text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm z-10">
-            {discountPercentage}% OFF
+        {discount > 0 && (
+          <span className="absolute top-2 left-2 inline-flex items-center gap-1 bg-destructive text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md">
+            <Tag size={10} />
+            -{discount}%
+          </span>
+        )}
+        {!showPrice && (
+          <span className="absolute bottom-2 left-2 bg-background/90 backdrop-blur text-foreground text-[10px] font-semibold px-2 py-1 rounded-full border border-border">
+            Consultar precio
           </span>
         )}
       </div>
 
-      {/* Info */}
-      <div className="flex flex-col flex-1">
-        <p className="text-[10px] font-bold text-primary uppercase tracking-wider truncate">
-          {product.empresa?.nombre ?? 'Tienda'}
+      <div className={`flex flex-col flex-1 min-w-0 ${isGrid ? 'p-3' : 'justify-between'}`}>
+        <p className="text-[10px] font-semibold text-primary uppercase tracking-wide truncate">
+          {product.empresa?.nombre ?? 'Tienda local'}
         </p>
-        <h3 className="text-[13px] sm:text-sm font-semibold text-foreground mt-1 line-clamp-2 leading-tight mb-2 flex-1">
+        <h3 className={`font-medium text-foreground line-clamp-2 leading-snug ${isGrid ? 'text-sm mt-1 mb-2 min-h-[2.5rem]' : 'text-sm sm:text-base mt-0.5'}`}>
           {product.nombre}
         </h3>
-        
-        <div className="mt-auto flex flex-col gap-1.5">
-          <PriceBlock
-            price={product.precio}
-            discPrice={finalPrice}
-            sale={hasRealDiscount}
-            isGrid
-          />
-          <ConsultButton productName={product.nombre} whatsapp={whatsapp} compact />
+
+        <div className={`flex flex-col gap-2 ${isGrid ? 'mt-auto' : 'mt-2'}`}>
+          {showPrice ? (
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span className={`font-extrabold tracking-tight ${hasOffer ? 'text-destructive' : 'text-foreground'} ${isGrid ? 'text-base sm:text-lg' : 'text-lg'}`}>
+                {formatPrice(finalPrice)}
+              </span>
+              {hasOffer && (
+                <span className="text-xs text-muted-foreground line-through">{formatPrice(precio)}</span>
+              )}
+            </div>
+          ) : (
+            <span className="text-xs font-medium text-muted-foreground italic">Precio a consultar</span>
+          )}
+          <a
+            href={buildWhatsAppURL(wa, product.nombre)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleWA}
+            className="inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-semibold rounded-full text-xs py-2 px-3 shadow-sm hover:shadow transition-all"
+          >
+            <MessageCircle size={14} />
+            Consultar
+          </a>
         </div>
       </div>
     </article>

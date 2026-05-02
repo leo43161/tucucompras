@@ -1,6 +1,7 @@
 import type { ProductoAPI, EmpresaAPI, CategoriaAPI } from '@/lib/redux/api/types'
 export interface FilterState {
-  categories: string[]
+  categoryId: number | null
+  search: string
   priceRange: [number, number]
   onlyOffers: boolean
   sortBy: string

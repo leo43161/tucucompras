@@ -4,7 +4,7 @@
 import { useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks'
 import { closeModal } from '@/lib/redux/slices/uiSlice'
-import { useGetProductoPorIdQuery } from '@/lib/redux/api/productsApi'
+import { useGetProductosQuery } from '@/lib/redux/api/productsApi'
 import { ProductDetailClient } from './ProductDetailClient'
 import { X, Loader2 } from 'lucide-react'
 
@@ -12,9 +12,17 @@ export function ProductModal() {
   const dispatch = useAppDispatch()
   const selectedId = useAppSelector((s) => s.ui.selectedProductId)
 
-  const { data: product, isLoading } = useGetProductoPorIdQuery(selectedId!, {
-    skip: selectedId === null,
-  })
+  // No hay endpoint público /productos/{id}: leemos el item desde el cache del listado.
+  const { product, isLoading } = useGetProductosQuery(
+    { limite: 60, offset: 0 },
+    {
+      skip: selectedId === null,
+      selectFromResult: ({ data, isLoading }) => ({
+        product: data?.data.find((p) => p.id === selectedId),
+        isLoading,
+      }),
+    }
+  )
 
   // 1. Manejo de Accesibilidad y UX (Tecla ESC y Bloqueo de Scroll)
   useEffect(() => {
@@ -74,7 +82,7 @@ export function ProductModal() {
             </div>
           ) : product ? (
             <ProductDetailClient
-              slug={product.slug ?? String(product.id)}
+              slug={String(product.id)}
               initialData={product}
             />
           ) : (

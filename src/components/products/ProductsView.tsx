@@ -1,120 +1,95 @@
-// src/components/products/ProductsView.tsx — actualizado
 'use client'
-
+import { useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks'
 import { setViewMode } from '@/lib/redux/slices/uiSlice'
 import { useGetProductosQuery } from '@/lib/redux/api/productsApi'
 import { ProductCard } from './ProductCard'
-import { LayoutList, LayoutGrid } from 'lucide-react'
+import { LayoutGrid, LayoutList } from 'lucide-react'
+import type { Product } from '@/types'
 
 export function ProductsView() {
   const dispatch = useAppDispatch()
   const viewMode = useAppSelector((s) => s.ui.viewMode)
   const filters = useAppSelector((s) => s.ui.filters)
 
-  // RTK Query — los filtros se aplican en el backend (cuando esté listo)
-  // Por ahora los datos mock se filtran dentro del queryFn
-  const { data, isLoading, isError } = useGetProductosQuery({
-    es_oferta: filters.onlyOffers || undefined,
-    precio_min: filters.priceRange[0],
-    precio_max: filters.priceRange[1] === 999999 ? undefined : filters.priceRange[1],
+  const orden = filters.sortBy === 'price-asc' ? 'ASC' : filters.sortBy === 'price-desc' ? 'DESC' : ''
+
+  const { data, isLoading, isError, isFetching } = useGetProductosQuery({
+    categoria_id: filters.categoryId ?? undefined,
+    search: filters.search || undefined,
+    orden_precio: orden as 'ASC' | 'DESC' | '',
+    limite: 48,
+    offset: 0,
   })
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-[140px] bg-white rounded-[14px] border border-[--border] animate-pulse" />
-        ))}
-      </div>
-    )
-  }
-
-  if (isError) {
-    return (
-      <div className="text-center py-20 text-[--text-muted]">
-        <p className="text-lg font-medium">Error al cargar productos</p>
-        <p className="text-sm mt-1">Intentá recargar la página</p>
-      </div>
-    )
-  }
-
-  const products = data?.data ?? []
+  const products: Product[] = useMemo(() => {
+    const items = data?.data ?? []
+    return items.filter((p) => {
+      const finalPrice = p.es_oferta && p.precio_oferta ? p.precio_oferta : p.precio
+      if (finalPrice < filters.priceRange[0] || finalPrice > filters.priceRange[1]) return false
+      if (filters.onlyOffers && !p.es_oferta) return false
+      return true
+    })
+  }, [data, filters.priceRange, filters.onlyOffers])
 
   return (
     <div>
-      {/* Toolbar */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-[--text-secondary]">
-          <span className="font-semibold text-[--text-primary]">{data?.total ?? 0}</span> productos
+        <p className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">{products.length}</span> productos
+          {isFetching && <span className="ml-2 text-xs opacity-60">actualizando…</span>}
         </p>
-        <div className="flex items-center gap-1 bg-[--bg] border border-[--border] rounded-lg p-1">
-          <ViewBtn
-            active={viewMode === 'list'}
-            onClick={() => dispatch(setViewMode('list'))}
-            label="Vista lista"
-          >
-            <LayoutList size={16} />
+        <div className="flex items-center gap-1 bg-muted/60 border border-border rounded-full p-1">
+          <ViewBtn active={viewMode === 'grid'} onClick={() => dispatch(setViewMode('grid'))} label="Grilla">
+            <LayoutGrid size={14} />
           </ViewBtn>
-          <ViewBtn
-            active={viewMode === 'grid'}
-            onClick={() => dispatch(setViewMode('grid'))}
-            label="Vista grilla"
-          >
-            <LayoutGrid size={16} />
+          <ViewBtn active={viewMode === 'list'} onClick={() => dispatch(setViewMode('list'))} label="Lista">
+            <LayoutList size={14} />
           </ViewBtn>
         </div>
       </div>
 
-      {/* Products */}
-      {viewMode === 'list' ? (
-        <div className="flex flex-col gap-3">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} view="list" />
+      {isLoading ? (
+        <div className={viewMode === 'grid' ? 'grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'flex flex-col gap-3'}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className={`bg-muted/50 border border-border rounded-2xl animate-pulse ${viewMode === 'grid' ? 'aspect-[3/4]' : 'h-28'}`} />
           ))}
+        </div>
+      ) : isError ? (
+        <Empty title="Error al cargar productos" sub="Intentá recargar la página" />
+      ) : products.length === 0 ? (
+        <Empty title="Sin resultados" sub="Probá cambiando los filtros o la búsqueda" />
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {products.map((p) => <ProductCard key={p.id} product={p} view="grid" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} view="grid" />
-          ))}
-        </div>
-      )}
-
-      {products.length === 0 && (
-        <div className="text-center py-20 text-[--text-muted]">
-          <p className="text-lg font-medium">Sin resultados</p>
-          <p className="text-sm mt-1">Probá cambiando los filtros</p>
+        <div className="flex flex-col gap-3">
+          {products.map((p) => <ProductCard key={p.id} product={p} view="list" />)}
         </div>
       )}
     </div>
   )
 }
 
-function ViewBtn({
-  active,
-  onClick,
-  label,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  label: string
-  children: React.ReactNode
-}) {
+function ViewBtn({ active, onClick, label, children }: { active: boolean; onClick: () => void; label: string; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
       aria-label={label}
       aria-pressed={active}
-      role="radio"
-      className={`p-1.5 rounded transition-all duration-200 ${
-        active
-          ? 'bg-primary text-foreground shadow-sm'
-          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-      }`}
+      className={`px-2.5 py-1.5 rounded-full transition-colors ${active ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
     >
       {children}
     </button>
+  )
+}
+
+function Empty({ title, sub }: { title: string; sub: string }) {
+  return (
+    <div className="text-center py-20 text-muted-foreground">
+      <p className="text-lg font-medium text-foreground">{title}</p>
+      <p className="text-sm mt-1">{sub}</p>
+    </div>
   )
 }
