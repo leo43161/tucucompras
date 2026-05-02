@@ -71,7 +71,7 @@ jobs:
           port: 21
           security: strict   # Permite conexiones inseguras si tu servidor no tiene FTPS configurado correctamente
           local-dir: ./upload_dir/ # <-- Le decimos exactamente qué archivo subir
-          server-dir: /public_html/partner/ # <-- La carpeta de destino en tu servidor
+          server-dir: /public_html/ # <-- La carpeta de destino en tu servidor
       - name: Retry Deploy if Failed
         if: failure()
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
