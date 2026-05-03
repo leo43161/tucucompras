@@ -65,7 +65,7 @@ export function SectionTabs() {
           ref={scrollerRef}
           role="tablist"
           aria-label="Categorías de productos"
-          className="scroll-tabs flex overflow-x-auto px-4 sm:px-10 lg:px-12 gap-2 snap-x snap-mandatory"
+          className="scroll-tabs flex overflow-x-auto px-4 md:px-14 gap-2 snap-x snap-mandatory"
         >
           <Tab active={isAll} onClick={handleAll}>Todo</Tab>
           {cats.map((c) => (
