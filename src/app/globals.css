@@ -55,3 +55,20 @@ body {
   transition: background-color .2s ease, color .2s ease;
 }
 .font-outfit { font-family: var(--font-outfit, system-ui, sans-serif); }
+
+/* Scrollbar fino y customizado para tabs horizontales (visible en hover en desktop) */
+.scroll-tabs {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+}
+.scroll-tabs::-webkit-scrollbar { height: 0; background: transparent; }
+@media (hover: hover) and (pointer: fine) {
+  .scroll-tabs:hover { scrollbar-width: thin; scrollbar-color: var(--primary) transparent; }
+  .scroll-tabs:hover::-webkit-scrollbar { height: 4px; }
+  .scroll-tabs:hover::-webkit-scrollbar-track { background: transparent; }
+  .scroll-tabs:hover::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--primary) 60%, transparent);
+    border-radius: 9999px;
+  }
+}

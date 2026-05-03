@@ -6,17 +6,25 @@ import { useGetProductosQuery } from '@/lib/redux/api/productsApi'
 import { ProductCard } from '@/components/products/ProductCard'
 import { buildImgUrl } from '@/lib/config'
 import { buildWhatsAppURL } from '@/lib/utils'
-import type { EmpresaAPI } from '@/lib/redux/api/types'
+import type { EmpresaAPI, ProductoAPI } from '@/lib/redux/api/types'
 
-interface Props { empresaId: number; initialEmpresa: EmpresaAPI | null }
+interface Props {
+  empresaId: number
+  initialEmpresa: EmpresaAPI | null
+  initialProducts?: ProductoAPI[]
+}
 
-export function CompanyDetailClient({ empresaId, initialEmpresa }: Props) {
-  const { data, isLoading, isError } = useGetProductosQuery({ limite: 10000, offset: 0 })
+export function CompanyDetailClient({ empresaId, initialEmpresa, initialProducts = [] }: Props) {
+  const { data, isLoading, isError } = useGetProductosQuery(
+    { limite: 10000, offset: 0 },
+    { skip: initialProducts.length > 0 }
+  )
   const all = data?.data ?? []
-  const products = all.filter((p) => p.empresa?.id === empresaId)
+  const fetched = all.filter((p) => p.empresa?.id === empresaId)
+  const products = fetched.length > 0 ? fetched : initialProducts
   const empresa = initialEmpresa ?? products[0]?.empresa ?? null
 
-  if (isLoading && !empresa) {
+  if (isLoading && !empresa && initialProducts.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="h-40 rounded-2xl bg-muted animate-pulse mb-6" />
@@ -57,7 +65,7 @@ export function CompanyDetailClient({ empresaId, initialEmpresa }: Props) {
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent" />
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-16 sm:-mt-20 mb-8 px-2">
+      <header className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-16 sm:-mt-20 mb-8 px-2">
         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-background border border-border shadow-md flex items-center justify-center overflow-hidden shrink-0">
           {logo ? (
             <Image src={logo} alt={empresa.nombre} width={96} height={96} className="object-cover" />
@@ -95,7 +103,7 @@ export function CompanyDetailClient({ empresaId, initialEmpresa }: Props) {
             </a>
           )}
         </div>
-      </div>
+      </header>
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold">Productos</h2>
@@ -104,7 +112,7 @@ export function CompanyDetailClient({ empresaId, initialEmpresa }: Props) {
         </span>
       </div>
 
-      {isError ? (
+      {isError && products.length === 0 ? (
         <Empty title="Error al cargar productos" sub="Intentá recargar la página" />
       ) : products.length === 0 ? (
         <Empty title="Esta tienda aún no publicó productos" sub="Volvé pronto." />
