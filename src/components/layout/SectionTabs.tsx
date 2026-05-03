@@ -71,6 +71,11 @@ export function SectionTabs() {
           {cats.map((c) => (
             <Tab key={c.id} active={categoryId === c.id && !onlyOffers} onClick={() => handleCat(c.id)}>
               {c.nombre}
+              {!!c.total_productos && (
+                <span className="ml-1.5 text-[10px] font-bold opacity-60 tabular-nums">
+                  {c.total_productos}
+                </span>
+              )}
             </Tab>
           ))}
           <Tab active={onlyOffers} onClick={handleOffers}>Ofertas</Tab>

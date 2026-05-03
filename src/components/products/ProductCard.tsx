@@ -28,7 +28,7 @@ export function ProductCard({ product, view }: Props) {
 
   const handleOpen = () => {
     registrarClick({ producto_id: product.id })
-    dispatch(openModal(product.id))
+    dispatch(openModal(product))
   }
   const handleWA = (e: React.MouseEvent) => {
     e.stopPropagation()

@@ -1,16 +1,16 @@
-// src/lib/redux/slices/uiSlice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { ViewMode, FilterState } from '@/types'
+import type { ProductoAPI } from '@/lib/redux/api/types'
 
 interface UIState {
   viewMode: ViewMode
-  selectedProductId: number | null
+  selectedProduct: ProductoAPI | null
   filters: FilterState
 }
 
 const initialState: UIState = {
   viewMode: 'grid',
-  selectedProductId: null,
+  selectedProduct: null,
   filters: {
     categoryId: null,
     search: '',
@@ -25,8 +25,8 @@ export const uiSlice = createSlice({
   initialState,
   reducers: {
     setViewMode: (s, a: PayloadAction<ViewMode>) => { s.viewMode = a.payload },
-    openModal: (s, a: PayloadAction<number>) => { s.selectedProductId = a.payload },
-    closeModal: (s) => { s.selectedProductId = null },
+    openModal: (s, a: PayloadAction<ProductoAPI>) => { s.selectedProduct = a.payload },
+    closeModal: (s) => { s.selectedProduct = null },
     setCategory: (s, a: PayloadAction<number | null>) => { s.filters.categoryId = a.payload },
     setSearch: (s, a: PayloadAction<string>) => { s.filters.search = a.payload },
     setOnlyOffers: (s, a: PayloadAction<boolean>) => { s.filters.onlyOffers = a.payload },

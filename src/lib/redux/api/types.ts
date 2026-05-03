@@ -4,7 +4,7 @@ export interface EmpresaAPI {
   logo_url?: string | null; banner_url?: string | null
   direccion?: string | null; latitud?: number | null; longitud?: number | null
 }
-export interface CategoriaAPI { id: number; nombre: string; slug?: string }
+export interface CategoriaAPI { id: number; nombre: string; slug?: string; total_productos?: number }
 export interface SubCategoriaAPI { id: number; categoria_id?: number; nombre: string; slug?: string }
 export interface ProductoAPI {
   id: number
