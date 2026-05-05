@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { API_BASE_URL } from '@/lib/config'
+import { buildProductPath } from '@/lib/utils'
 import type { CategoriaAPI, ProductosFrontResponse } from '@/lib/redux/api/types'
 
 export const dynamic = 'force-static'
@@ -18,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ])
 
   const productUrls: MetadataRoute.Sitemap = productos.map((p) => ({
-    url: `${BASE_URL}/productos/${p.id}`,
+    url: `${BASE_URL}${buildProductPath(p.id, p.nombre)}`,
     changeFrequency: 'weekly',
     priority: 0.8,
   }))

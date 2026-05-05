@@ -24,8 +24,28 @@ export function normalizePhoneAR(phone: string): string {
 
 export const SITE_URL = 'https://tucucompras.com.ar'
 
-export function buildProductURL(productId: number | string): string {
-  return `${SITE_URL}/productos/${productId}`
+export function slugify(input: string): string {
+  return (input ?? '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+}
+
+export function buildProductSlug(name?: string): string {
+  return name ? slugify(name) : ''
+}
+
+export function buildProductPath(id: number | string, name?: string): string {
+  const s = buildProductSlug(name)
+  return s ? `/productos/${id}/${s}` : `/productos/${id}`
+}
+
+export function buildProductURL(id: number | string, name?: string): string {
+  return `${SITE_URL}${buildProductPath(id, name)}`
 }
 
 interface WhatsAppProductOptions {
@@ -43,7 +63,7 @@ export function buildWhatsAppURL(
     typeof productOrName === 'string' ? { productName: productOrName } : productOrName
 
   const url =
-    opts.productUrl ?? (opts.productId != null ? buildProductURL(opts.productId) : undefined)
+    opts.productUrl ?? (opts.productId != null ? buildProductURL(opts.productId, opts.productName) : undefined)
 
   const lines: string[] = ['Hola! Quiero consultar por:', '', `*${opts.productName}*`]
   if (typeof opts.price === 'number' && opts.price > 0) {

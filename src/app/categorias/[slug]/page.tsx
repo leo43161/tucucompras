@@ -3,6 +3,7 @@ import { CategoryDetailClient } from '@/components/categories/CategoryDetailClie
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { API_BASE_URL, buildImgUrl } from '@/lib/config'
+import { buildProductPath } from '@/lib/utils'
 import type { CategoriaAPI, ProductoAPI, ProductosFrontResponse } from '@/lib/redux/api/types'
 
 const SITE_URL = 'https://tucucompras.com.ar'
@@ -80,7 +81,7 @@ export default async function CategoriaPage({ params }: { params: Promise<{ slug
     itemListElement: initialProducts.slice(0, 20).map((p, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      url: `${SITE_URL}/productos/${p.id}`,
+      url: `${SITE_URL}${buildProductPath(p.id, p.nombre)}`,
       name: p.nombre,
       image: buildImgUrl(p.imagen_principal_url),
     })),
