@@ -58,8 +58,8 @@ export function CompanyDetailClient({ empresaId, initialEmpresa, initialProducts
         <ArrowLeft size={16} /> Volver
       </Link>
 
-      <section className="relative rounded-2xl overflow-hidden border border-border bg-card mb-8">
-        <div className="relative w-full h-32 sm:h-44 lg:h-52 bg-gradient-to-br from-primary/40 via-primary/15 to-muted">
+      <section className="relative rounded-2xl border border-border bg-card mb-8">
+        <div className="relative w-full h-32 sm:h-44 lg:h-52 rounded-t-2xl overflow-hidden bg-gradient-to-br from-primary/40 via-primary/15 to-muted">
           {banner && (
             <Image src={banner} alt="" fill className="object-cover" priority sizes="100vw" />
           )}
