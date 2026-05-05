@@ -1,24 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ProductRedirect } from '@/components/products/ProductRedirect'
-import { API_BASE_URL } from '@/lib/config'
+import { fetchAllProducts } from '@/lib/products-fetch'
 import { buildProductPath } from '@/lib/utils'
-import type { ProductoAPI, ProductosFrontResponse } from '@/lib/redux/api/types'
 
 const SITE_URL = 'https://tucucompras.com.ar'
 
 interface RouteParams { id: string }
-
-async function fetchAllProducts(): Promise<ProductoAPI[]> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/obtenerProductosFront?limite=10000&offset=0`, { cache: 'no-store' })
-    if (!res.ok) return []
-    const data: ProductosFrontResponse = await res.json()
-    return data?.data ?? []
-  } catch {
-    return []
-  }
-}
 
 export async function generateStaticParams(): Promise<RouteParams[]> {
   const products = await fetchAllProducts()
