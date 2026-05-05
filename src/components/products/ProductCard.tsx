@@ -56,7 +56,7 @@ export function ProductCard({ product, view }: Props) {
             sizes="140px"
           />
           {discount > 0 && (
-            <span className="absolute top-1.5 left-1.5 inline-flex items-center gap-0.5 bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow">
+            <span className="absolute top-1.5 left-1.5 inline-flex items-center gap-0.5 bg-linear-to-r from-rose-500 to-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow">
               -{discount}%
             </span>
           )}
@@ -111,7 +111,7 @@ export function ProductCard({ product, view }: Props) {
       className="group relative flex flex-col bg-card border border-border rounded-3xl cursor-pointer hover:border-primary/60 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary overflow-hidden"
     >
       {/* IMAGEN */}
-      <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-muted via-muted/60 to-muted">
+      <div className="relative w-full aspect-square overflow-hidden bg-linear-to-br from-muted via-muted/60 to-muted">
         <Image
           src={img}
           alt={product.nombre}
@@ -120,12 +120,12 @@ export function ProductCard({ product, view }: Props) {
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
 
-        {/* Gradient overlay sutil al hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* linear overlay sutil al hover */}
+        <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         {/* Badge de descuento */}
         {discount > 0 && (
-          <div className="shine-on-hover absolute top-3 left-3 inline-flex items-center gap-1 bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white text-xs font-black uppercase px-2.5 py-1 rounded-full shadow-lg shadow-rose-500/40 ring-1 ring-white/20">
+          <div className="shine-on-hover absolute top-3 left-3 inline-flex items-center gap-1 bg-linear-to-r from-rose-500 via-red-500 to-orange-500 text-white text-xs font-black uppercase px-2.5 py-1 rounded-full shadow-lg shadow-rose-500/40 ring-1 ring-white/20">
             <Flame size={12} className="drop-shadow" />
             -{discount}%
           </div>
@@ -206,7 +206,7 @@ export function ProductCard({ product, view }: Props) {
                 <span
                   className={`font-outfit font-black tracking-tight mt-0.5 ${
                     hasOffer
-                      ? 'text-2xl bg-gradient-to-r from-rose-600 to-orange-500 bg-clip-text text-transparent'
+                      ? 'text-2xl bg-linear-to-r from-rose-600 to-orange-500 bg-clip-text text-transparent'
                       : 'text-2xl text-foreground'
                   }`}
                 >
@@ -231,7 +231,7 @@ export function ProductCard({ product, view }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleWA}
-            className="relative overflow-hidden inline-flex items-center justify-center gap-2 bg-gradient-to-br from-[#25D366] via-[#1ebe5d] to-[#128C7E] hover:from-[#1ebe5d] hover:to-[#0f6f64] text-white font-bold rounded-xl text-sm py-2.5 px-3 shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/40 transition-all active:scale-[0.98]"
+            className="relative overflow-hidden inline-flex items-center justify-center gap-2 bg-linear-to-br from-[#25D366] via-[#1ebe5d] to-[#128C7E] hover:from-[#1ebe5d] hover:to-[#0f6f64] text-white font-bold rounded-xl text-sm py-2.5 px-3 shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/40 transition-all active:scale-[0.98]"
           >
             <MessageCircle size={16} strokeWidth={2.5} />
             Consultar por WhatsApp
