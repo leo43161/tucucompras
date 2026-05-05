@@ -58,56 +58,61 @@ export function CompanyDetailClient({ empresaId, initialEmpresa, initialProducts
         <ArrowLeft size={16} /> Volver
       </Link>
 
-      <div className="relative w-full h-40 sm:h-56 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/30 via-primary/10 to-muted border border-border mb-6">
-        {banner && (
-          <Image src={banner} alt={empresa.nombre} fill className="object-cover" priority sizes="100vw" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent" />
-      </div>
+      <section className="relative rounded-2xl overflow-hidden border border-border bg-card mb-8">
+        <div className="relative w-full h-32 sm:h-44 lg:h-52 bg-gradient-to-br from-primary/40 via-primary/15 to-muted">
+          {banner && (
+            <Image src={banner} alt="" fill className="object-cover" priority sizes="100vw" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+        </div>
 
-      <header className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-16 sm:-mt-20 mb-8 px-2">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-background border border-border shadow-md flex items-center justify-center overflow-hidden shrink-0">
-          {logo ? (
-            <Image src={logo} alt={empresa.nombre} width={96} height={96} className="object-cover" />
-          ) : (
-            <Store size={32} className="text-primary" />
-          )}
+        <div className="px-4 sm:px-6 pb-5 sm:pb-6 -mt-12 sm:-mt-14 flex flex-col sm:flex-row sm:items-end gap-4">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-background border border-border shadow-lg flex items-center justify-center overflow-hidden shrink-0">
+            {logo ? (
+              <Image src={logo} alt={empresa.nombre} width={112} height={112} className="object-cover w-full h-full" />
+            ) : (
+              <Store size={40} className="text-primary" />
+            )}
+          </div>
+
+          <div className="flex-1 min-w-0 sm:pb-1">
+            <h1 className="font-outfit text-2xl sm:text-3xl font-bold leading-tight truncate">{empresa.nombre}</h1>
+            {empresa.direccion && (
+              <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-1.5">
+                <MapPin size={13} className="shrink-0" />
+                <span className="truncate">{empresa.direccion}</span>
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2 sm:shrink-0 sm:pb-1">
+            {empresa.whatsapp_contacto && (
+              <a
+                href={wa}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-semibold rounded-full text-xs sm:text-sm px-4 py-2 transition-colors"
+              >
+                <MessageCircle size={14} /> WhatsApp
+              </a>
+            )}
+            {empresa.sitio_web && (
+              <a
+                href={empresa.sitio_web}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 bg-muted hover:bg-muted/70 border border-border text-foreground rounded-full text-xs sm:text-sm px-4 py-2 transition-colors"
+              >
+                <ExternalLink size={14} /> Sitio web
+              </a>
+            )}
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="font-outfit text-2xl sm:text-3xl font-bold leading-tight">{empresa.nombre}</h1>
-          {empresa.direccion && (
-            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-1">
-              <MapPin size={12} /> {empresa.direccion}
-            </p>
-          )}
-        </div>
-        <div className="flex gap-2 shrink-0">
-          {empresa.whatsapp_contacto && (
-            <a
-              href={wa}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-semibold rounded-full text-xs px-4 py-2"
-            >
-              <MessageCircle size={14} /> WhatsApp
-            </a>
-          )}
-          {empresa.sitio_web && (
-            <a
-              href={empresa.sitio_web}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 bg-muted hover:bg-muted/70 border border-border text-foreground rounded-full text-xs px-4 py-2"
-            >
-              <ExternalLink size={14} /> Sitio web
-            </a>
-          )}
-        </div>
-      </header>
+      </section>
 
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold">Productos</h2>
-        <span className="text-xs text-muted-foreground">
+        <h2 className="text-lg sm:text-xl font-bold">Productos</h2>
+        <span className="text-xs sm:text-sm text-muted-foreground">
           {products.length} producto{products.length === 1 ? '' : 's'}
         </span>
       </div>

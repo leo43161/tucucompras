@@ -2,21 +2,11 @@ import type { Metadata } from 'next'
 import { CompanyDetailClient } from '@/components/companies/CompanyDetailClient'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { API_BASE_URL, buildImgUrl } from '@/lib/config'
-import type { ProductoAPI, ProductosFrontResponse, EmpresaAPI } from '@/lib/redux/api/types'
+import { buildImgUrl } from '@/lib/config'
+import { fetchAllProducts } from '@/lib/products-fetch'
+import type { ProductoAPI, EmpresaAPI } from '@/lib/redux/api/types'
 
 const SITE_URL = 'https://tucucompras.com.ar'
-
-async function fetchAllProducts(): Promise<ProductoAPI[]> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/obtenerProductosFront?limite=10000&offset=0`, { cache: 'no-store' })
-    if (!res.ok) return []
-    const data: ProductosFrontResponse = await res.json()
-    return data?.data ?? []
-  } catch {
-    return []
-  }
-}
 
 function uniqueEmpresas(products: ProductoAPI[]): EmpresaAPI[] {
   const map = new Map<number, EmpresaAPI>()
