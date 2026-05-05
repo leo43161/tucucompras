@@ -58,7 +58,11 @@ export function ProductDetailClient({ id, initialData }: Props) {
   const discount = hasOffer ? Math.round(((precio - finalPrice) / precio) * 100) : 0
   const showPrice = finalPrice > 0
   const img = buildImgUrl(product.imagen_principal_url) ?? 'https://placehold.co/600x600/eee/aaa?text=Sin+imagen'
-  const wa = buildWhatsAppURL(product.empresa?.whatsapp_contacto ?? '', product.nombre)
+  const wa = buildWhatsAppURL(product.empresa?.whatsapp_contacto ?? '', {
+    productName: product.nombre,
+    productId: product.id,
+    price: showPrice ? finalPrice : undefined,
+  })
 
   const handleWA = () => { registrarClick({ producto_id: product.id }); registrarLead({ producto_id: product.id, tipo_lead: 'whatsapp' }) }
   const handleSitio = () => registrarLead({ producto_id: product.id, tipo_lead: 'sitio_web' })

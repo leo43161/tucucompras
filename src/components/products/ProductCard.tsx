@@ -86,11 +86,11 @@ export function ProductCard({ product, view }: Props) {
               <span className="text-xs font-semibold text-muted-foreground italic">Precio a consultar</span>
             )}
             <a
-              href={buildWhatsAppURL(wa, product.nombre)}
+              href={buildWhatsAppURL(wa, { productName: product.nombre, productId: product.id, price: showPrice ? finalPrice : undefined })}
               target="_blank"
               rel="noopener noreferrer"
               onClick={handleWA}
-              className="inline-flex items-center justify-center gap-1.5 bg-gradient-to-br from-[#25D366] to-[#128C7E] hover:from-[#1ebe5d] hover:to-[#0f6f64] text-white font-bold rounded-full text-xs py-2 px-4 shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all"
+              className="inline-flex items-center justify-center gap-1.5 bg-linear-to-br from-[#25D366] to-[#128C7E] hover:from-[#1ebe5d] hover:to-[#0f6f64] text-white font-bold rounded-full text-xs py-2 px-4 shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all"
             >
               <MessageCircle size={14} />
               Consultar
@@ -227,7 +227,7 @@ export function ProductCard({ product, view }: Props) {
 
           {/* CTA WhatsApp */}
           <a
-            href={buildWhatsAppURL(wa, product.nombre)}
+            href={buildWhatsAppURL(wa, { productName: product.nombre, productId: product.id, price: showPrice ? finalPrice : undefined })}
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleWA}

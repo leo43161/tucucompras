@@ -22,7 +22,38 @@ export function normalizePhoneAR(phone: string): string {
   return `549${digits}`
 }
 
-export function buildWhatsAppURL(phone: string, productName: string): string {
-  const msg = encodeURIComponent(`Hola! Quiero consultar por: *${productName}*`)
+export const SITE_URL = 'https://tucucompras.com.ar'
+
+export function buildProductURL(productId: number | string): string {
+  return `${SITE_URL}/productos/${productId}`
+}
+
+interface WhatsAppProductOptions {
+  productName: string
+  productId?: number | string
+  price?: number
+  productUrl?: string
+}
+
+export function buildWhatsAppURL(
+  phone: string,
+  productOrName: string | WhatsAppProductOptions,
+): string {
+  const opts: WhatsAppProductOptions =
+    typeof productOrName === 'string' ? { productName: productOrName } : productOrName
+
+  const url =
+    opts.productUrl ?? (opts.productId != null ? buildProductURL(opts.productId) : undefined)
+
+  const lines: string[] = ['Hola! Quiero consultar por:', '', `*${opts.productName}*`]
+  if (typeof opts.price === 'number' && opts.price > 0) {
+    lines.push(`💲 Precio: ${formatPrice(opts.price)}`)
+  }
+  if (url) {
+    lines.push('', url)
+  }
+  lines.push('-TucuCompras ', 'https://tucucompras.com.ar-')
+
+  const msg = encodeURIComponent(lines.join('\n'))
   return `https://wa.me/${normalizePhoneAR(phone)}?text=${msg}`
 }
