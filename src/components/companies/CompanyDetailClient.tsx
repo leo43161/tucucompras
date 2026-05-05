@@ -30,7 +30,7 @@ export function CompanyDetailClient({ empresaId, initialEmpresa, initialProducts
         <div className="h-40 rounded-2xl bg-muted animate-pulse mb-6" />
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-muted/50 border border-border rounded-2xl animate-pulse aspect-[3/4]" />
+            <div key={i} className="bg-muted/50 border border-border rounded-2xl animate-pulse aspect-3/4" />
           ))}
         </div>
       </div>
@@ -59,15 +59,15 @@ export function CompanyDetailClient({ empresaId, initialEmpresa, initialProducts
       </Link>
 
       <section className="relative rounded-2xl border border-border bg-card mb-8">
-        <div className="relative w-full h-32 sm:h-44 lg:h-52 rounded-t-2xl overflow-hidden bg-gradient-to-br from-primary/40 via-primary/15 to-muted">
+        <div className="relative w-full h-32 sm:h-44 lg:h-52 rounded-t-2xl overflow-hidden bg-linear-to-br from-primary/40 via-primary/15 to-muted z-0">
           {banner && (
             <Image src={banner} alt="" fill className="object-cover" priority sizes="100vw" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-card via-card/40 to-transparent z-0" />
         </div>
 
         <div className="px-4 sm:px-6 pb-5 sm:pb-6 -mt-12 sm:-mt-14 flex flex-col sm:flex-row sm:items-end gap-4">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-background border border-border shadow-lg flex items-center justify-center overflow-hidden shrink-0">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-background border border-border shadow-lg flex items-center justify-center overflow-hidden shrink-0 z-30">
             {logo ? (
               <Image src={logo} alt={empresa.nombre} width={112} height={112} className="object-cover w-full h-full" />
             ) : (
