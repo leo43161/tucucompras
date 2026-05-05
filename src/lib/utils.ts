@@ -52,7 +52,7 @@ export function buildWhatsAppURL(
   if (url) {
     lines.push('', url)
   }
-  lines.push('-TucuCompras ', 'https://tucucompras.com.ar-')
+  lines.push('-TucuCompras-')
 
   const msg = encodeURIComponent(lines.join('\n'))
   return `https://wa.me/${normalizePhoneAR(phone)}?text=${msg}`
