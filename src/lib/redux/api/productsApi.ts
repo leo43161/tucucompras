@@ -3,15 +3,18 @@ import { API_BASE_URL } from '@/lib/config'
 import type {
   ProductoAPI, CategoriaAPI, SubCategoriaAPI,
   ProductosFrontResponse, GetProductosFrontParams,
-  LeadPayload, ClickPayload,
+  LeadPayload, ClickPayload, EmpresaAPI,
 } from './types'
+
+interface EmpresasFrontResponse { success: boolean; total: number; data: EmpresaAPI[] }
+interface EmpresaFrontResponse  { success: boolean; data: EmpresaAPI }
 
 // Mapea 1:1 a Api.php: obtenerProductosFront, listar_categorias, listar_sub_categorias.
 // Leads/Clicks => endpoints públicos pendientes en backend (ver bloque SQL/PHP abajo).
 export const tucucomprasApi = createApi({
   reducerPath: 'tucucomprasApi',
   baseQuery: fetchBaseQuery({ baseUrl: API_BASE_URL }),
-  tagTypes: ['Producto', 'Categoria', 'SubCategoria'],
+  tagTypes: ['Producto', 'Categoria', 'SubCategoria', 'Empresa'],
   endpoints: (b) => ({
     getProductos: b.query<ProductosFrontResponse, GetProductosFrontParams>({
       query: (params) => ({ url: '/obtenerProductosFront', params }),
@@ -30,6 +33,16 @@ export const tucucomprasApi = createApi({
       transformResponse: (r: { status: number; data: SubCategoriaAPI[] }) => r.data ?? [],
       providesTags: ['SubCategoria'],
     }),
+    getEmpresas: b.query<EmpresaAPI[], void>({
+      query: () => '/obtenerEmpresasFront',
+      transformResponse: (r: EmpresasFrontResponse) => r.data ?? [],
+      providesTags: ['Empresa'],
+    }),
+    getEmpresa: b.query<EmpresaAPI | null, number>({
+      query: (id) => ({ url: '/obtenerEmpresaFront', params: { id } }),
+      transformResponse: (r: EmpresaFrontResponse) => r.data ?? null,
+      providesTags: ['Empresa'],
+    }),
     registrarLead: b.mutation<{ status: number }, LeadPayload>({
       query: (body) => ({ url: '/registrar_lead', method: 'POST', body }),
     }),
@@ -41,6 +54,7 @@ export const tucucomprasApi = createApi({
 
 export const {
   useGetProductosQuery, useGetCategoriasQuery, useGetSubCategoriasQuery,
+  useGetEmpresasQuery, useGetEmpresaQuery,
   useRegistrarLeadMutation, useRegistrarClickMutation,
 } = tucucomprasApi
 

@@ -4,40 +4,37 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { buildImgUrl } from '@/lib/config'
 import { fetchAllProducts } from '@/lib/products-fetch'
-import type { ProductoAPI, EmpresaAPI } from '@/lib/redux/api/types'
+import { fetchAllEmpresas, fetchEmpresaById } from '@/lib/empresas-fetch'
+import { buildEmpresaPath, buildEmpresaSlug } from '@/lib/utils'
 
 const SITE_URL = 'https://tucucompras.com.ar'
 
-function uniqueEmpresas(products: ProductoAPI[]): EmpresaAPI[] {
-  const map = new Map<number, EmpresaAPI>()
-  for (const p of products) {
-    if (p.empresa?.id && !map.has(p.empresa.id)) map.set(p.empresa.id, p.empresa)
-  }
-  return [...map.values()]
+interface RouteParams { id: string; slug: string }
+
+export async function generateStaticParams(): Promise<RouteParams[]> {
+  const empresas = await fetchAllEmpresas()
+  return empresas
+    .map((e) => ({ id: String(e.id), slug: buildEmpresaSlug(e.nombre) }))
+    .filter((r) => !!r.slug)
 }
 
-export async function generateStaticParams() {
-  const products = await fetchAllProducts()
-  return uniqueEmpresas(products).map((e) => ({ slug: String(e.id) }))
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params
-  const id = Number(slug)
-  const products = await fetchAllProducts()
-  const empresa = uniqueEmpresas(products).find((e) => e.id === id)
+export async function generateMetadata({ params }: { params: Promise<RouteParams> }): Promise<Metadata> {
+  const { id: idStr } = await params
+  const id = Number(idStr)
+  const empresa = await fetchEmpresaById(id)
   if (!empresa) return { title: 'Tienda no encontrada | TucuCompras' }
   const banner = buildImgUrl(empresa.banner_url)
   const logo = buildImgUrl(empresa.logo_url)
+  const canonicalPath = buildEmpresaPath(empresa.id, empresa.nombre)
   const desc = `Productos disponibles en ${empresa.nombre}. Catálogo local de Tucumán — consultá directo por WhatsApp.`
   return {
     title: `${empresa.nombre} | TucuCompras`,
     description: desc,
-    alternates: { canonical: `${SITE_URL}/empresas/${empresa.id}` },
+    alternates: { canonical: `${SITE_URL}${canonicalPath}` },
     openGraph: {
       title: empresa.nombre,
       description: desc,
-      url: `${SITE_URL}/empresas/${empresa.id}`,
+      url: `${SITE_URL}${canonicalPath}`,
       images: banner ? [{ url: banner, width: 1200, height: 630, alt: empresa.nombre }]
         : logo ? [{ url: logo, alt: empresa.nombre }]
         : [],
@@ -50,19 +47,23 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-export default async function EmpresaPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const id = Number(slug)
-  const products = await fetchAllProducts()
-  const empresa = uniqueEmpresas(products).find((e) => e.id === id) ?? null
+export default async function EmpresaPage({ params }: { params: Promise<RouteParams> }) {
+  const { id: idStr } = await params
+  const id = Number(idStr)
+  const [empresa, products] = await Promise.all([
+    fetchEmpresaById(id),
+    fetchAllProducts(),
+  ])
   const empresaProducts = products.filter((p) => p.empresa?.id === id)
+
+  const canonicalPath = empresa ? buildEmpresaPath(empresa.id, empresa.nombre) : `/empresas/${id}`
 
   const localBizLd = empresa && {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
-    '@id': `${SITE_URL}/empresas/${empresa.id}`,
+    '@id': `${SITE_URL}${canonicalPath}`,
     name: empresa.nombre,
-    url: empresa.sitio_web ?? `${SITE_URL}/empresas/${empresa.id}`,
+    url: empresa.sitio_web ?? `${SITE_URL}${canonicalPath}`,
     image: buildImgUrl(empresa.banner_url) ?? buildImgUrl(empresa.logo_url) ?? undefined,
     logo: buildImgUrl(empresa.logo_url) ?? undefined,
     telephone: empresa.whatsapp_contacto ?? undefined,
@@ -80,7 +81,7 @@ export default async function EmpresaPage({ params }: { params: Promise<{ slug: 
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: empresa.nombre, item: `${SITE_URL}/empresas/${empresa.id}` },
+      { '@type': 'ListItem', position: 2, name: empresa.nombre, item: `${SITE_URL}${canonicalPath}` },
     ],
   }
 

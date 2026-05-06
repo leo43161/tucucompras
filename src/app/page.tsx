@@ -2,7 +2,6 @@ import { Navbar } from '@/components/layout/Navbar'
 import { SectionTabs } from '@/components/layout/SectionTabs'
 import { FilterSidebar } from '@/components/layout/FilterSidebar'
 import { ProductsView } from '@/components/products/ProductsView'
-import { ProductModal } from '@/components/products/ProductModal'
 import { Footer } from '@/components/layout/Footer'
 import Head from 'next/head'
 
@@ -21,7 +20,6 @@ export default function HomePage() {
         </main>
       </div>
       <Footer />
-      <ProductModal />
     </>
   )
 }

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { API_BASE_URL } from '@/lib/config'
-import { buildProductPath } from '@/lib/utils'
+import { buildEmpresaPath, buildProductPath } from '@/lib/utils'
+import { fetchAllEmpresas } from '@/lib/empresas-fetch'
 import type { CategoriaAPI, ProductosFrontResponse } from '@/lib/redux/api/types'
 
 export const dynamic = 'force-static'
@@ -8,7 +9,7 @@ export const dynamic = 'force-static'
 const BASE_URL = 'https://tucucompras.com.ar'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [productos, categorias] = await Promise.all([
+  const [productos, categorias, empresas] = await Promise.all([
     fetch(`${API_BASE_URL}/obtenerProductosFront?limite=10000&offset=0`)
       .then(async (r) => (r.ok ? ((await r.json()) as ProductosFrontResponse).data ?? [] : []))
       .catch(() => [] as ProductosFrontResponse['data']),
@@ -16,6 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .then((r) => r.ok ? r.json() : { data: [] })
       .then((j) => (j?.data ?? []) as CategoriaAPI[])
       .catch(() => [] as CategoriaAPI[]),
+    fetchAllEmpresas(),
   ])
 
   const productUrls: MetadataRoute.Sitemap = productos.map((p) => ({
@@ -32,10 +34,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }))
 
-  const empresaIds = new Set<number>()
-  for (const p of productos) if (p.empresa?.id) empresaIds.add(p.empresa.id)
-  const empresaUrls: MetadataRoute.Sitemap = [...empresaIds].map((id) => ({
-    url: `${BASE_URL}/empresas/${id}`,
+  const empresaUrls: MetadataRoute.Sitemap = empresas.map((e) => ({
+    url: `${BASE_URL}${buildEmpresaPath(e.id, e.nombre)}`,
     changeFrequency: 'weekly',
     priority: 0.6,
   }))

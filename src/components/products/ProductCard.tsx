@@ -1,10 +1,9 @@
 'use client'
 import { useState } from 'react'
 import Image from 'next/image'
-import { MessageCircle, Heart, Flame, Store } from 'lucide-react'
-import { formatPrice, buildWhatsAppURL } from '@/lib/utils'
-import { useAppDispatch } from '@/lib/redux/hooks'
-import { openModal } from '@/lib/redux/slices/uiSlice'
+import { useRouter } from 'next/navigation'
+import { MessageCircle, Heart, Flame, Store, ExternalLink } from 'lucide-react'
+import { buildProductPath, formatPrice, buildWhatsAppURL } from '@/lib/utils'
 import { useRegistrarClickMutation, useRegistrarLeadMutation } from '@/lib/redux/api/productsApi'
 import { buildImgUrl } from '@/lib/config'
 import type { Product } from '@/types'
@@ -12,7 +11,7 @@ import type { Product } from '@/types'
 interface Props { product: Product; view: 'list' | 'grid' }
 
 export function ProductCard({ product, view }: Props) {
-  const dispatch = useAppDispatch()
+  const router = useRouter()
   const [registrarClick] = useRegistrarClickMutation()
   const [registrarLead] = useRegistrarLeadMutation()
   const [fav, setFav] = useState(false)
@@ -24,15 +23,22 @@ export function ProductCard({ product, view }: Props) {
   const discount = hasOffer ? Math.round(((precio - finalPrice) / precio) * 100) : 0
   const showPrice = finalPrice > 0
   const wa = product.empresa?.whatsapp_contacto ?? ''
+  const productLink = product.link && product.link.trim() ? product.link.trim() : null
   const img = buildImgUrl(product.imagen_principal_url) ?? 'https://placehold.co/600x600/e5e7eb/9ca3af?text=Sin+imagen'
 
+  const productPath = buildProductPath(product.id, product.nombre)
   const handleOpen = () => {
     registrarClick({ producto_id: product.id })
-    dispatch(openModal(product))
+    router.push(productPath)
   }
   const handleWA = (e: React.MouseEvent) => {
     e.stopPropagation()
     registrarLead({ producto_id: product.id, tipo_lead: 'whatsapp' })
+  }
+  const handleLink = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    registrarClick({ producto_id: product.id })
+    registrarLead({ producto_id: product.id, tipo_lead: 'sitio_web' })
   }
   const toggleFav = (e: React.MouseEvent) => { e.stopPropagation(); setFav((v) => !v) }
 
@@ -85,16 +91,29 @@ export function ProductCard({ product, view }: Props) {
             ) : (
               <span className="text-xs font-semibold text-muted-foreground italic">Precio a consultar</span>
             )}
-            <a
-              href={buildWhatsAppURL(wa, { productName: product.nombre, productId: product.id, price: showPrice ? finalPrice : undefined })}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={handleWA}
-              className="inline-flex items-center justify-center gap-1.5 bg-linear-to-br from-[#25D366] to-[#128C7E] hover:from-[#1ebe5d] hover:to-[#0f6f64] text-white font-bold rounded-full text-xs py-2 px-4 shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all"
-            >
-              <MessageCircle size={14} />
-              Consultar
-            </a>
+            {productLink ? (
+              <a
+                href={productLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleLink}
+                className="inline-flex items-center justify-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full text-xs py-2 px-4 shadow-md hover:shadow-lg transition-all"
+              >
+                <ExternalLink size={14} />
+                Ir al sitio
+              </a>
+            ) : (
+              <a
+                href={buildWhatsAppURL(wa, { productName: product.nombre, productId: product.id, price: showPrice ? finalPrice : undefined })}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleWA}
+                className="inline-flex items-center justify-center gap-1.5 bg-linear-to-br from-[#25D366] to-[#128C7E] hover:from-[#1ebe5d] hover:to-[#0f6f64] text-white font-bold rounded-full text-xs py-2 px-4 shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all"
+              >
+                <MessageCircle size={14} />
+                Consultar
+              </a>
+            )}
           </div>
         </div>
       </article>
@@ -225,17 +244,30 @@ export function ProductCard({ product, view }: Props) {
             </p>
           )}
 
-          {/* CTA WhatsApp */}
-          <a
-            href={buildWhatsAppURL(wa, { productName: product.nombre, productId: product.id, price: showPrice ? finalPrice : undefined })}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={handleWA}
-            className="relative overflow-hidden inline-flex items-center justify-center gap-2 bg-linear-to-br from-[#25D366] via-[#1ebe5d] to-[#128C7E] hover:from-[#1ebe5d] hover:to-[#0f6f64] text-white font-bold rounded-xl text-sm py-2.5 px-3 shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/40 transition-all active:scale-[0.98]"
-          >
-            <MessageCircle size={16} strokeWidth={2.5} />
-            Consultar por WhatsApp
-          </a>
+          {/* CTA */}
+          {productLink ? (
+            <a
+              href={productLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleLink}
+              className="relative overflow-hidden inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-sm py-2.5 px-3 shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+            >
+              <ExternalLink size={16} strokeWidth={2.5} />
+              Ir al sitio
+            </a>
+          ) : (
+            <a
+              href={buildWhatsAppURL(wa, { productName: product.nombre, productId: product.id, price: showPrice ? finalPrice : undefined })}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleWA}
+              className="relative overflow-hidden inline-flex items-center justify-center gap-2 bg-linear-to-br from-[#25D366] via-[#1ebe5d] to-[#128C7E] hover:from-[#1ebe5d] hover:to-[#0f6f64] text-white font-bold rounded-xl text-sm py-2.5 px-3 shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/40 transition-all active:scale-[0.98]"
+            >
+              <MessageCircle size={16} strokeWidth={2.5} />
+              Consultar por WhatsApp
+            </a>
+          )}
         </div>
       </div>
     </article>

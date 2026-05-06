@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { ExternalLink, Heart, MessageCircle, Share2 } from 'lucide-react'
+import { ExternalLink, Heart, MessageCircle, Send, Share2 } from 'lucide-react'
 import {
   useRegistrarLeadMutation,
   useRegistrarClickMutation,
@@ -12,16 +12,23 @@ interface Props {
   whatsappUrl: string
   shareUrl: string
   sitioWeb?: string | null
+  productLink?: string | null
 }
 
-export function ProductActions({ productId, productName, whatsappUrl, shareUrl, sitioWeb }: Props) {
+export function ProductActions({ productId, productName, whatsappUrl, shareUrl, sitioWeb, productLink }: Props) {
   const [fav, setFav] = useState(false)
   const [registrarLead] = useRegistrarLeadMutation()
   const [registrarClick] = useRegistrarClickMutation()
 
+  const link = productLink && productLink.trim() ? productLink.trim() : null
+
   const handleWA = () => {
     registrarClick({ producto_id: productId })
     registrarLead({ producto_id: productId, tipo_lead: 'whatsapp' })
+  }
+  const handleLink = () => {
+    registrarClick({ producto_id: productId })
+    registrarLead({ producto_id: productId, tipo_lead: 'sitio_web' })
   }
   const handleSitio = () => registrarLead({ producto_id: productId, tipo_lead: 'sitio_web' })
   const handleShare = async () => {
@@ -37,15 +44,27 @@ export function ProductActions({ productId, productName, whatsappUrl, shareUrl, 
   return (
     <>
       <div className="flex gap-3">
-        <a
-          href={whatsappUrl}
-          onClick={handleWA}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-semibold rounded-xl py-3.5 text-sm"
-        >
-          <MessageCircle size={18} /> Consultar por WhatsApp
-        </a>
+        {link ? (
+          <a
+            href={link}
+            onClick={handleLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl py-3.5 text-sm"
+          >
+            <ExternalLink size={18} /> Ir al sitio
+          </a>
+        ) : (
+          <a
+            href={whatsappUrl}
+            onClick={handleWA}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-semibold rounded-xl py-3.5 text-sm"
+          >
+            <MessageCircle size={18} /> Consultar por WhatsApp
+          </a>
+        )}
         <button
           type="button"
           onClick={() => setFav((v) => !v)}
@@ -66,6 +85,16 @@ export function ProductActions({ productId, productName, whatsappUrl, shareUrl, 
           <Share2 size={18} />
         </button>
       </div>
+
+      <a
+        href={`https://wa.me/?text=${encodeURIComponent(`Mirá este producto en TucuCompras: ${productName}\n${shareUrl}`)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Compartir por WhatsApp"
+        className="inline-flex items-center justify-center gap-2 self-stretch bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] dark:text-[#25D366] border border-[#25D366]/30 font-semibold rounded-xl py-2.5 text-sm transition-colors"
+      >
+        <Send size={16} /> Compartir por WhatsApp
+      </a>
 
       {sitioWeb && (
         <a

@@ -2,7 +2,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink, MapPin, MessageCircle, Store } from 'lucide-react'
-import { useGetProductosQuery } from '@/lib/redux/api/productsApi'
+import { useGetProductosQuery, useGetEmpresaQuery } from '@/lib/redux/api/productsApi'
 import { ProductCard } from '@/components/products/ProductCard'
 import { buildImgUrl } from '@/lib/config'
 import { buildWhatsAppURL } from '@/lib/utils'
@@ -19,10 +19,11 @@ export function CompanyDetailClient({ empresaId, initialEmpresa, initialProducts
     { limite: 10000, offset: 0 },
     { skip: initialProducts.length > 0 }
   )
+  const { data: empresaData } = useGetEmpresaQuery(empresaId, { skip: !!initialEmpresa })
   const all = data?.data ?? []
   const fetched = all.filter((p) => p.empresa?.id === empresaId)
   const products = fetched.length > 0 ? fetched : initialProducts
-  const empresa = initialEmpresa ?? products[0]?.empresa ?? null
+  const empresa = initialEmpresa ?? empresaData ?? products[0]?.empresa ?? null
 
   if (isLoading && !empresa && initialProducts.length === 0) {
     return (

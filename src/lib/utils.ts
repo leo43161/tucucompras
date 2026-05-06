@@ -48,6 +48,19 @@ export function buildProductURL(id: number | string, name?: string): string {
   return `${SITE_URL}${buildProductPath(id, name)}`
 }
 
+export function buildEmpresaSlug(name?: string): string {
+  return name ? slugify(name) : ''
+}
+
+export function buildEmpresaPath(id: number | string, name?: string): string {
+  const s = buildEmpresaSlug(name)
+  return s ? `/empresas/${id}/${s}` : `/empresas/${id}`
+}
+
+export function buildEmpresaURL(id: number | string, name?: string): string {
+  return `${SITE_URL}${buildEmpresaPath(id, name)}`
+}
+
 interface WhatsAppProductOptions {
   productName: string
   productId?: number | string

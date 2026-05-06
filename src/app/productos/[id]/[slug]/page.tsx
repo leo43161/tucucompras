@@ -8,7 +8,7 @@ import { ProductActions } from '@/components/products/ProductActions'
 import { RelatedProducts } from '@/components/products/RelatedProducts'
 import { buildImgUrl } from '@/lib/config'
 import { fetchAllProducts } from '@/lib/products-fetch'
-import { buildProductPath, buildProductSlug, buildWhatsAppURL, formatPrice } from '@/lib/utils'
+import { buildEmpresaPath, buildProductPath, buildProductSlug, buildWhatsAppURL, formatPrice } from '@/lib/utils'
 
 const SITE_URL = 'https://tucucompras.com.ar'
 
@@ -201,7 +201,7 @@ export default async function ProductPage({ params }: { params: Promise<RoutePar
             <div className="flex items-center justify-between gap-3 flex-wrap">
               {product.empresa?.id ? (
                 <Link
-                  href={`/empresas/${product.empresa.id}`}
+                  href={buildEmpresaPath(product.empresa.id, product.empresa.nombre)}
                   className="text-[11px] font-bold text-primary uppercase tracking-wider hover:underline"
                 >
                   {product.empresa.nombre}
@@ -270,7 +270,7 @@ export default async function ProductPage({ params }: { params: Promise<RoutePar
                     </p>
                   )}
                 </div>
-                <Link href={`/empresas/${product.empresa.id}`} className="text-xs text-primary font-medium hover:underline shrink-0">
+                <Link href={buildEmpresaPath(product.empresa.id, product.empresa.nombre)} className="text-xs text-primary font-medium hover:underline shrink-0">
                   Ver tienda ›
                 </Link>
               </div>
@@ -282,6 +282,7 @@ export default async function ProductPage({ params }: { params: Promise<RoutePar
               whatsappUrl={wa}
               shareUrl={productUrl}
               sitioWeb={product.empresa?.sitio_web ?? null}
+              productLink={product.link ?? null}
             />
           </div>
         </div>

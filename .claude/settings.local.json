@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npm install *)",
       "Bash(npx tsc *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(rm -rf \"E:/leo/tucucompras/AQUIII/tucucompras/src/app/empresas/[slug]\")",
+      "Bash(mkdir -p \"E:/leo/tucucompras/AQUIII/tucucompras/src/app/empresas/[id]/[slug]\")",
+      "Bash(grep -n \"CREATE TABLE \\\\`empresas\\\\`\" \"C:/xampp/htdocs/tucucompras/a0101073_tucucom.sql\")"
     ]
   }
 }
