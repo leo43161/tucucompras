@@ -76,7 +76,7 @@ export function CompanyDetailClient({ empresaId, initialEmpresa, initialProducts
             )}
           </div>
 
-          <div className="flex-1 min-w-0 sm:pb-1">
+          <div className="flex-1 min-w-0 sm:pb-1 z-30">
             <h1 className="font-outfit text-2xl sm:text-3xl font-bold leading-tight truncate">{empresa.nombre}</h1>
             {empresa.direccion && (
               <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-1.5">
@@ -86,7 +86,7 @@ export function CompanyDetailClient({ empresaId, initialEmpresa, initialProducts
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2 sm:shrink-0 sm:pb-1">
+          <div className="flex flex-wrap gap-2 sm:shrink-0 sm:pb-1 z-30">
             {empresa.whatsapp_contacto && (
               <a
                 href={wa}
