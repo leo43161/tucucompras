@@ -3,7 +3,7 @@ import { SectionTabs } from '@/components/layout/SectionTabs'
 import { FilterSidebar } from '@/components/layout/FilterSidebar'
 import { ProductsView } from '@/components/products/ProductsView'
 import { Footer } from '@/components/layout/Footer'
-import { ServiceFlyerSlide } from '@/components/marketing/ServiceFlyer'
+import { ServiceFlyerSlide, ServiceFlyerTopBanner } from '@/components/marketing/ServiceFlyer'
 import Head from 'next/head'
 
 export default function HomePage() {
@@ -17,6 +17,7 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto flex">
         <FilterSidebar />
         <main className="flex-1 p-4 sm:p-6">
+          <ServiceFlyerTopBanner />
           <ProductsView />
         </main>
       </div>

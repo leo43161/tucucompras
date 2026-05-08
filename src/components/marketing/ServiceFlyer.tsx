@@ -10,8 +10,6 @@ import {
   X,
   Sparkles,
   MessageCircle,
-  Target,
-  BarChart3,
 } from 'lucide-react'
 import { WHATSAPP_CONTACTO } from '@/lib/utils'
 
@@ -81,6 +79,70 @@ export function ServiceFlyerCard({ index, view }: ServiceFlyerCardProps) {
 
   if (view === 'list') return <ListFlyer copy={copy} />
   return <GridFlyer copy={copy} />
+}
+
+/* ============================================================
+ * TOP BANNER — horizontal, arriba de los productos. Aleatorio.
+ * Paleta tenue pero visible (suave, no satura).
+ * ============================================================ */
+const FLYER_ORDER: FlyerKind[] = ['hero', 'marketing', 'web']
+
+export function ServiceFlyerTopBanner() {
+  // Random pick client-side para evitar mismatch de hidratación (Math.random
+  // en el server da otro valor que en el cliente).
+  const [kind, setKind] = useState<FlyerKind | null>(null)
+  useEffect(() => {
+    setKind(FLYER_ORDER[Math.floor(Math.random() * FLYER_ORDER.length)])
+  }, [])
+
+  if (!kind) return <div className="h-[112px] sm:h-[96px]" aria-hidden /> // placeholder estable
+
+  const copy = FLYERS[kind]
+  const palette = softPaletteFor(kind)
+  const Icon = iconFor(kind)
+
+  return (
+    <article
+      className={`relative mb-5 rounded-2xl overflow-hidden border ${palette.border} ${palette.bg} shadow-sm`}
+      aria-label={`Publicidad — ${copy.eyebrow}`}
+    >
+      {/* Acento lateral que da personalidad sin saturar */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${palette.accent}`} aria-hidden />
+
+      <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3.5 sm:p-4 pl-5 sm:pl-6">
+        {/* Icon badge */}
+        <div className={`shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl ${palette.iconBg} ${palette.iconBorder} border flex items-center justify-center`}>
+          <Icon size={26} className={palette.iconColor} strokeWidth={1.9} />
+        </div>
+
+        {/* Copy */}
+        <div className="flex-1 min-w-0">
+          <span className={`inline-flex items-center gap-1 ${palette.chipBg} ${palette.chipText} text-[10px] font-bold uppercase tracking-[0.16em] rounded-full px-2 py-0.5 mb-1`}>
+            <Sparkles size={10} />
+            Publicidad · {copy.eyebrow}
+          </span>
+          <h3 className="font-outfit font-bold text-foreground leading-tight text-base sm:text-lg tracking-tight">
+            {copy.headline}
+          </h3>
+          <p className="font-outfit text-muted-foreground text-xs sm:text-[13px] mt-0.5 leading-snug line-clamp-2 max-w-[70ch]">
+            {copy.sub}
+          </p>
+        </div>
+
+        {/* CTA */}
+        <a
+          href={buildAgencyWA(copy.waMessage)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`shrink-0 inline-flex items-center justify-center gap-1.5 ${palette.ctaBg} text-white font-bold rounded-lg text-xs sm:text-sm py-2 sm:py-2.5 px-3.5 sm:px-4 shadow-sm hover:shadow-md transition-all active:scale-[0.97] hover:-translate-y-0.5 self-start sm:self-auto`}
+        >
+          <MessageCircle size={14} strokeWidth={2.6} />
+          <span>{copy.cta}</span>
+          <ChevronRight size={14} strokeWidth={2.8} />
+        </a>
+      </div>
+    </article>
+  )
 }
 
 /* ----------- GRID VARIANT — banner que ocupa 2 columnas ----------- */
@@ -242,25 +304,26 @@ function ListFlyer({ copy }: { copy: FlyerCopy }) {
 }
 
 /* ============================================================
- * SLIDE-IN PANEL (bottom-right, dismiss + expand)
+ * SLIDE-IN PILL (bottom-right) — link directo a WhatsApp
  * ============================================================ */
-const STORAGE_KEY = 'tc.servicesFlyer.dismissedUntil'
-const DISMISS_HOURS = 24
+// Key versionada — bumpear el sufijo invalida dismissals previos
+const STORAGE_KEY = 'tc.servicesFlyer.dismissedUntil.v2'
+const DISMISS_HOURS = 6
 
 export function ServiceFlyerSlide() {
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
-  const [expanded, setExpanded] = useState(false)
-  const [activeKind, setActiveKind] = useState<FlyerKind>('hero')
   const triggeredRef = useRef(false)
 
   useEffect(() => {
     setMounted(true)
 
-    // Respect previous dismiss
+    // Respect previous dismiss (clave versionada — old keys ya no afectan)
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw && Number(raw) > Date.now()) return
+      // Limpiamos llaves antiguas para no acumular basura en localStorage
+      localStorage.removeItem('tc.servicesFlyer.dismissedUntil')
     } catch {}
 
     const trigger = () => {
@@ -269,12 +332,12 @@ export function ServiceFlyerSlide() {
       setVisible(true)
     }
 
-    // Aparece cuando el usuario hace scroll moderado, o tras 6s, lo que ocurra primero
+    // Aparece a los 2.5s o si hay scroll moderado, lo que ocurra primero
     const onScroll = () => {
-      if (window.scrollY > 900) trigger()
+      if (window.scrollY > 350) trigger()
     }
     window.addEventListener('scroll', onScroll, { passive: true })
-    const t = setTimeout(trigger, 6000)
+    const t = setTimeout(trigger, 2500)
 
     return () => {
       window.removeEventListener('scroll', onScroll)
@@ -282,9 +345,10 @@ export function ServiceFlyerSlide() {
     }
   }, [])
 
-  const handleDismiss = () => {
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     setVisible(false)
-    setExpanded(false)
     try {
       localStorage.setItem(STORAGE_KEY, String(Date.now() + DISMISS_HOURS * 3600 * 1000))
     } catch {}
@@ -292,21 +356,34 @@ export function ServiceFlyerSlide() {
 
   if (!mounted || !visible) return null
 
-  const copy = FLYERS[activeKind]
-  const palette = paletteFor(activeKind)
+  const palette = paletteFor('hero')
+  const waHref = buildAgencyWA(
+    'Hola! Vi en TucuCompras lo de expandir las ventas digitales fuera de Tucumán y quiero saber cómo trabajan con alcance nacional.',
+  )
 
   return (
     <div className="fixed z-[60] bottom-4 right-4 sm:bottom-5 sm:right-5 max-w-[calc(100vw-2rem)] pointer-events-none">
-      {/* COLLAPSED PILL */}
-      {!expanded && (
+      <div className="pointer-events-auto relative animate-flyer-in">
+        {/* Botón X dismiss flotante (chiquito, arriba a la derecha de la pill) */}
         <button
           type="button"
-          onClick={() => setExpanded(true)}
-          className={`pointer-events-auto group flex items-center gap-2.5 ${palette.bg} border ${palette.border} text-white rounded-full pl-2 pr-4 py-2 shadow-2xl ${palette.shadow} hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-300 animate-flyer-in`}
-          aria-label="Ver servicios para impulsar ventas"
+          onClick={handleDismiss}
+          aria-label="Cerrar"
+          className="absolute -top-2 -right-2 z-10 w-6 h-6 rounded-full bg-background border border-border text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center shadow-md transition-colors"
+        >
+          <X size={12} strokeWidth={2.6} />
+        </button>
+
+        {/* PILL — link directo a WhatsApp */}
+        <a
+          href={waHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`group flex items-center gap-2.5 ${palette.bg} border ${palette.border} text-white rounded-full pl-2 pr-4 py-2 shadow-2xl ${palette.shadow} hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-300`}
+          aria-label="Consultar por WhatsApp para impulsar ventas digitales"
         >
           <span className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/15 backdrop-blur border border-white/25">
-            <Rocket size={16} strokeWidth={2.4} />
+            <MessageCircle size={16} strokeWidth={2.4} />
             <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white/30 animate-pulse" />
           </span>
           <span className="text-left leading-tight">
@@ -322,149 +399,9 @@ export function ServiceFlyerSlide() {
             strokeWidth={3}
             className="opacity-80 group-hover:translate-x-0.5 transition-transform"
           />
-        </button>
-      )}
-
-      {/* EXPANDED PANEL */}
-      {expanded && (
-        <div className="pointer-events-auto w-[min(380px,calc(100vw-2rem))] animate-flyer-in">
-          <div
-            className={`relative rounded-2xl overflow-hidden border ${palette.border} ${palette.bg} shadow-2xl ${palette.shadow}`}
-          >
-            {/* glow blobs */}
-            <div className={`absolute -top-12 -right-10 w-44 h-44 rounded-full blur-3xl opacity-40 ${palette.blob1} pointer-events-none`} />
-            <div className={`absolute -bottom-14 -left-10 w-44 h-44 rounded-full blur-3xl opacity-30 ${palette.blob2} pointer-events-none`} />
-
-            {/* close */}
-            <button
-              type="button"
-              onClick={handleDismiss}
-              aria-label="Cerrar"
-              className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-colors"
-            >
-              <X size={15} strokeWidth={2.5} />
-            </button>
-
-            {/* HEADER */}
-            <div className="relative px-5 pt-5 pb-3">
-              <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.18em] rounded-full px-2.5 py-1 mb-2.5">
-                <Sparkles size={11} />
-                {copy.eyebrow}
-              </span>
-              <h3 className="font-outfit font-black text-white leading-[1.1] text-xl pr-8">
-                {copy.headline}
-              </h3>
-              <p className="font-outfit text-white/85 text-sm mt-2 leading-snug">
-                {copy.sub}
-              </p>
-            </div>
-
-            {/* TAB SELECTOR */}
-            <div className="relative px-3">
-              <div className="flex gap-1 bg-black/20 border border-white/15 rounded-xl p-1 backdrop-blur-md">
-                <ServiceTab
-                  active={activeKind === 'hero'}
-                  onClick={() => setActiveKind('hero')}
-                  icon={<Rocket size={13} />}
-                  label="Nacional"
-                />
-                <ServiceTab
-                  active={activeKind === 'marketing'}
-                  onClick={() => setActiveKind('marketing')}
-                  icon={<Megaphone size={13} />}
-                  label="Ventas"
-                />
-                <ServiceTab
-                  active={activeKind === 'web'}
-                  onClick={() => setActiveKind('web')}
-                  icon={<Globe size={13} />}
-                  label="Expansión"
-                />
-              </div>
-            </div>
-
-            {/* BENEFITS */}
-            <div className="relative px-5 pt-4 pb-2">
-              <ul className="grid grid-cols-3 gap-2">
-                {copy.bullets.map((b, i) => {
-                  const Ic = [Target, BarChart3, Sparkles][i % 3]
-                  return (
-                    <li
-                      key={b}
-                      className="rounded-lg bg-white/10 border border-white/15 backdrop-blur-md p-2 text-center"
-                    >
-                      <Ic size={14} className="text-white/95 mx-auto mb-1" strokeWidth={2.2} />
-                      <span className="block text-[10px] font-bold text-white/95 leading-tight">
-                        {b}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-
-            {/* CTA */}
-            <div className="relative px-5 pb-5 pt-3">
-              <a
-                href={buildAgencyWA(copy.waMessage)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`shine-on-hover group/cta relative overflow-hidden flex items-center justify-center gap-2 bg-white ${palette.ctaText} font-black rounded-xl text-sm py-3 px-4 shadow-lg shadow-black/20 hover:shadow-xl transition-all active:scale-[0.98] hover:-translate-y-0.5 w-full`}
-              >
-                <MessageCircle size={16} strokeWidth={2.8} />
-                {copy.cta}
-                <ChevronRight size={16} strokeWidth={3} className="group-hover/cta:translate-x-0.5 transition-transform" />
-              </a>
-              <p className="text-center text-[10px] text-white/70 font-semibold mt-2">
-                Te respondemos por WhatsApp · sin compromiso
-              </p>
-            </div>
-
-            {/* footer */}
-            <div className="relative bg-black/25 border-t border-white/15 px-4 py-2 flex items-center justify-between">
-              <span className="text-[9px] font-extrabold text-white/95 uppercase tracking-[0.16em] inline-flex items-center gap-1">
-                <Rocket size={10} />
-                Equipo TucuCompras
-              </span>
-              <button
-                type="button"
-                onClick={handleDismiss}
-                className="text-[10px] font-bold text-white/70 hover:text-white uppercase tracking-wider transition-colors"
-              >
-                No, gracias
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        </a>
+      </div>
     </div>
-  )
-}
-
-function ServiceTab({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean
-  onClick: () => void
-  icon: React.ReactNode
-  label: string
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex-1 inline-flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-black uppercase tracking-wider transition-all ${
-        active
-          ? 'bg-white text-slate-900 shadow-md'
-          : 'text-white/80 hover:text-white hover:bg-white/10'
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
   )
 }
 
@@ -511,5 +448,48 @@ function iconFor(kind: FlyerKind) {
       return Megaphone
     case 'web':
       return Globe
+  }
+}
+
+/* Paleta SOFT — tonos discretos pensados para banner top (claro y oscuro).
+ * Mantiene la identidad cromática de cada flyer pero a baja saturación. */
+function softPaletteFor(kind: FlyerKind) {
+  switch (kind) {
+    case 'hero':
+      return {
+        bg: 'bg-linear-to-r from-violet-500/10 via-fuchsia-500/8 to-orange-500/10 dark:from-violet-500/15 dark:via-fuchsia-500/10 dark:to-orange-500/15',
+        border: 'border-violet-500/25 dark:border-violet-400/20',
+        accent: 'bg-linear-to-b from-violet-500 to-fuchsia-500',
+        iconBg: 'bg-violet-500/15 dark:bg-violet-400/15',
+        iconBorder: 'border-violet-500/30 dark:border-violet-400/25',
+        iconColor: 'text-violet-700 dark:text-violet-300',
+        chipBg: 'bg-violet-500/15 dark:bg-violet-400/15',
+        chipText: 'text-violet-800 dark:text-violet-200',
+        ctaBg: 'bg-violet-600 hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400',
+      }
+    case 'marketing':
+      return {
+        bg: 'bg-linear-to-r from-rose-500/10 via-orange-500/8 to-amber-500/10 dark:from-rose-500/15 dark:via-orange-500/10 dark:to-amber-500/15',
+        border: 'border-rose-500/25 dark:border-rose-400/20',
+        accent: 'bg-linear-to-b from-rose-500 to-orange-500',
+        iconBg: 'bg-rose-500/15 dark:bg-rose-400/15',
+        iconBorder: 'border-rose-500/30 dark:border-rose-400/25',
+        iconColor: 'text-rose-700 dark:text-rose-300',
+        chipBg: 'bg-rose-500/15 dark:bg-rose-400/15',
+        chipText: 'text-rose-800 dark:text-rose-200',
+        ctaBg: 'bg-rose-600 hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400',
+      }
+    case 'web':
+      return {
+        bg: 'bg-linear-to-r from-sky-500/10 via-cyan-500/8 to-emerald-500/10 dark:from-sky-500/15 dark:via-cyan-500/10 dark:to-emerald-500/15',
+        border: 'border-sky-500/25 dark:border-sky-400/20',
+        accent: 'bg-linear-to-b from-sky-500 to-cyan-500',
+        iconBg: 'bg-sky-500/15 dark:bg-sky-400/15',
+        iconBorder: 'border-sky-500/30 dark:border-sky-400/25',
+        iconColor: 'text-sky-700 dark:text-sky-300',
+        chipBg: 'bg-sky-500/15 dark:bg-sky-400/15',
+        chipText: 'text-sky-800 dark:text-sky-200',
+        ctaBg: 'bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400',
+      }
   }
 }

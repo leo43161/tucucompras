@@ -138,12 +138,12 @@ export function ProductsView() {
   )
 }
 
-// Inserta flyers de servicios entre los productos.
-// Grid: 1 flyer cada 8 productos (ocupa 2 cols).
-// List: 1 flyer cada 6 productos.
+// Inserta flyers de servicios entre los productos — espaciado generoso.
+// Grid: 1 flyer cada 20 productos (ocupa 2 cols).
+// List: 1 flyer cada 14 productos.
 function interleaveWithFlyers(products: Product[], view: 'grid' | 'list'): React.ReactNode[] {
-  const cadence = view === 'grid' ? 8 : 6
-  const startAfter = view === 'grid' ? 6 : 4 // primer flyer un poquito antes para no esperar demasiado
+  const cadence = view === 'grid' ? 20 : 14
+  const startAfter = view === 'grid' ? 12 : 9 // primer flyer un poquito antes para no esperar demasiado
   const out: React.ReactNode[] = []
   let flyerIdx = 0
   products.forEach((p, i) => {

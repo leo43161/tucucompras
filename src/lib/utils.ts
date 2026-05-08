@@ -1,5 +1,5 @@
 // src/lib/utils.ts
-export const WHATSAPP_CONTACTO = '5493815550000'
+export const WHATSAPP_CONTACTO = '5493816527629'
 
 export function formatPrice(amount: number): string {
   return new Intl.NumberFormat('es-AR', {
