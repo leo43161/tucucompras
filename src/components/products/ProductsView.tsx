@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks'
 import { setViewMode } from '@/lib/redux/slices/uiSlice'
 import { useGetProductosQuery } from '@/lib/redux/api/productsApi'
 import { ProductCard } from './ProductCard'
+import { ServiceFlyerCard } from '@/components/marketing/ServiceFlyer'
 import { LayoutGrid, LayoutList, Loader2 } from 'lucide-react'
 import type { Product } from '@/types'
 
@@ -108,11 +109,11 @@ export function ProductsView() {
         <Empty title="Sin resultados" sub="Probá cambiando los filtros o la búsqueda" />
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {visible.map((p) => <ProductCard key={p.id} product={p} view="grid" />)}
+          {interleaveWithFlyers(visible, 'grid').map((node) => node)}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {visible.map((p) => <ProductCard key={p.id} product={p} view="list" />)}
+          {interleaveWithFlyers(visible, 'list').map((node) => node)}
         </div>
       )}
 
@@ -135,6 +136,26 @@ export function ProductsView() {
       )}
     </div>
   )
+}
+
+// Inserta flyers de servicios entre los productos.
+// Grid: 1 flyer cada 8 productos (ocupa 2 cols).
+// List: 1 flyer cada 6 productos.
+function interleaveWithFlyers(products: Product[], view: 'grid' | 'list'): React.ReactNode[] {
+  const cadence = view === 'grid' ? 8 : 6
+  const startAfter = view === 'grid' ? 6 : 4 // primer flyer un poquito antes para no esperar demasiado
+  const out: React.ReactNode[] = []
+  let flyerIdx = 0
+  products.forEach((p, i) => {
+    out.push(<ProductCard key={`p-${p.id}`} product={p} view={view} />)
+    const pos = i + 1
+    const shouldInsert = pos === startAfter || (pos > startAfter && (pos - startAfter) % cadence === 0)
+    if (shouldInsert && pos !== products.length) {
+      out.push(<ServiceFlyerCard key={`flyer-${pos}`} index={flyerIdx} view={view} />)
+      flyerIdx++
+    }
+  })
+  return out
 }
 
 function ViewBtn({ active, onClick, label, children }: { active: boolean; onClick: () => void; label: string; children: React.ReactNode }) {

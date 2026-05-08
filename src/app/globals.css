@@ -71,6 +71,13 @@ body {
 }
 .group:hover .shine-on-hover::after { animation: shine 1.1s ease forwards; }
 
+/* Slide-in animation reusable para flyers de servicios */
+@keyframes flyer-in {
+  0%   { transform: translateY(20px) scale(.96); opacity: 0; }
+  100% { transform: translateY(0) scale(1);     opacity: 1; }
+}
+.animate-flyer-in { animation: flyer-in .55s cubic-bezier(.2,.8,.2,1) both; }
+
 /* Scrollbar fino y customizado para tabs horizontales (visible en hover en desktop) */
 .scroll-tabs {
   scrollbar-width: none;

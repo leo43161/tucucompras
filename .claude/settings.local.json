@@ -6,7 +6,9 @@
       "Bash(npm run *)",
       "Bash(rm -rf \"E:/leo/tucucompras/AQUIII/tucucompras/src/app/empresas/[slug]\")",
       "Bash(mkdir -p \"E:/leo/tucucompras/AQUIII/tucucompras/src/app/empresas/[id]/[slug]\")",
-      "Bash(grep -n \"CREATE TABLE \\\\`empresas\\\\`\" \"C:/xampp/htdocs/tucucompras/a0101073_tucucom.sql\")"
+      "Bash(grep -n \"CREATE TABLE \\\\`empresas\\\\`\" \"C:/xampp/htdocs/tucucompras/a0101073_tucucom.sql\")",
+      "Bash(npx --no-install tsc --noEmit)",
+      "Bash(grep -iE \"^\\(rocket|megaphone|globe|target|sparkles|trending-up|message-circle|x\\)\\\\.js$\")"
     ]
   }
 }

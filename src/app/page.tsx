@@ -3,6 +3,7 @@ import { SectionTabs } from '@/components/layout/SectionTabs'
 import { FilterSidebar } from '@/components/layout/FilterSidebar'
 import { ProductsView } from '@/components/products/ProductsView'
 import { Footer } from '@/components/layout/Footer'
+import { ServiceFlyerSlide } from '@/components/marketing/ServiceFlyer'
 import Head from 'next/head'
 
 export default function HomePage() {
@@ -20,6 +21,7 @@ export default function HomePage() {
         </main>
       </div>
       <Footer />
+      <ServiceFlyerSlide />
     </>
   )
 }
