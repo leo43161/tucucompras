@@ -7,6 +7,9 @@ on:
     branches:
       - main # O la rama principal que uses (master, prod, etc.)
   workflow_dispatch: # Permite la ejecución manual
+  schedule:
+    # Este ejemplo se ejecuta todos los días a las 03:00 AM (hora UTC)
+    - cron: '0 3 * * *'
 
   # --- AÑADIR ESTO ---
 concurrency:
