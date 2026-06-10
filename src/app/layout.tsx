@@ -4,6 +4,7 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import { ReduxProvider } from '@/providers/ReduxProvider'
 import { ThemeProvider } from '@/providers/ThemeProvider'
 import { GA_ID } from '@/lib/config'
+import { siteGraphLd, ldScript } from '@/lib/schema'
 import './globals.css'
 
 const SITE_URL = 'https://tucucompras.com.ar'
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${outfit.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <body className="font-dm-sans bg-background text-foreground min-h-screen antialiased">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(siteGraphLd()) }} />
         <ThemeProvider>
           <ReduxProvider>{children}</ReduxProvider>
         </ThemeProvider>

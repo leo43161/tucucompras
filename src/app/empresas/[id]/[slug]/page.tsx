@@ -6,6 +6,7 @@ import { buildImgUrl } from '@/lib/config'
 import { fetchAllProducts } from '@/lib/products-fetch'
 import { fetchAllEmpresas, fetchEmpresaById } from '@/lib/empresas-fetch'
 import { buildEmpresaPath, buildEmpresaSlug } from '@/lib/utils'
+import { buildStoreLd, buildBreadcrumbLd, ldScript } from '@/lib/schema'
 
 const SITE_URL = 'https://tucucompras.com.ar'
 
@@ -58,40 +59,20 @@ export default async function EmpresaPage({ params }: { params: Promise<RoutePar
 
   const canonicalPath = empresa ? buildEmpresaPath(empresa.id, empresa.nombre) : `/empresas/${id}`
 
-  const localBizLd = empresa && {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    '@id': `${SITE_URL}${canonicalPath}`,
-    name: empresa.nombre,
-    url: empresa.sitio_web ?? `${SITE_URL}${canonicalPath}`,
-    image: buildImgUrl(empresa.banner_url) ?? buildImgUrl(empresa.logo_url) ?? undefined,
-    logo: buildImgUrl(empresa.logo_url) ?? undefined,
-    telephone: empresa.whatsapp_contacto ?? undefined,
-    ...(empresa.direccion
-      ? { address: { '@type': 'PostalAddress', streetAddress: empresa.direccion, addressRegion: 'Tucumán', addressCountry: 'AR' } }
-      : {}),
-    ...(empresa.latitud && empresa.longitud
-      ? { geo: { '@type': 'GeoCoordinates', latitude: empresa.latitud, longitude: empresa.longitud } }
-      : {}),
-    areaServed: 'Tucumán, Argentina',
-  }
+  const storeLd = empresa && buildStoreLd(empresa, empresaProducts)
 
-  const breadcrumbLd = empresa && {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: empresa.nombre, item: `${SITE_URL}${canonicalPath}` },
-    ],
-  }
+  const breadcrumbLd = empresa && buildBreadcrumbLd([
+    { name: 'Inicio', url: SITE_URL },
+    { name: empresa.nombre, url: `${SITE_URL}${canonicalPath}` },
+  ])
 
   return (
     <>
-      {localBizLd && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBizLd) }} />
+      {storeLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(storeLd) }} />
       )}
       {breadcrumbLd && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(breadcrumbLd) }} />
       )}
       <Navbar />
       <CompanyDetailClient empresaId={id} initialEmpresa={empresa} initialProducts={empresaProducts} />

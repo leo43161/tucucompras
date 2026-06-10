@@ -8,7 +8,12 @@
       "Bash(mkdir -p \"E:/leo/tucucompras/AQUIII/tucucompras/src/app/empresas/[id]/[slug]\")",
       "Bash(grep -n \"CREATE TABLE \\\\`empresas\\\\`\" \"C:/xampp/htdocs/tucucompras/a0101073_tucucom.sql\")",
       "Bash(npx --no-install tsc --noEmit)",
-      "Bash(grep -iE \"^\\(rocket|megaphone|globe|target|sparkles|trending-up|message-circle|x\\)\\\\.js$\")"
+      "Bash(grep -iE \"^\\(rocket|megaphone|globe|target|sparkles|trending-up|message-circle|x\\)\\\\.js$\")",
+      "Bash(npx next *)",
+      "Bash(npx eslint *)",
+      "Bash(node -e \"const t=require\\('./tsconfig.json'\\);console.log\\('noUnusedLocals:',t.compilerOptions.noUnusedLocals\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(npx --yes tsx -e \"import {buildStoreLd, siteGraphLd} from './src/lib/schema.ts'; console.log\\('ok'\\)\")"
     ]
   }
 }

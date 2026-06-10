@@ -9,6 +9,7 @@ import { RelatedProducts } from '@/components/products/RelatedProducts'
 import { buildImgUrl } from '@/lib/config'
 import { fetchAllProducts } from '@/lib/products-fetch'
 import { buildEmpresaPath, buildProductPath, buildProductSlug, buildWhatsAppURL, formatPrice } from '@/lib/utils'
+import { buildProductLd, buildBreadcrumbLd, ldScript } from '@/lib/schema'
 
 const SITE_URL = 'https://tucucompras.com.ar'
 
@@ -110,33 +111,7 @@ export default async function ProductPage({ params }: { params: Promise<RoutePar
   const relatedByCategory = sameCategory.slice(0, 8)
   const relatedByCompany = sameCompany.slice(0, 4)
 
-  const productLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.nombre,
-    description: product.descripcion ?? '',
-    image: imgAbs ? [imgAbs] : [],
-    sku: String(product.id),
-    brand: { '@type': 'Brand', name: product.empresa?.nombre ?? 'TucuCompras' },
-    category: product.categoria?.nombre,
-    offers: {
-      '@type': 'Offer',
-      url: productUrl,
-      priceCurrency: 'ARS',
-      price: finalPrice,
-      availability: 'https://schema.org/InStock',
-      itemCondition: 'https://schema.org/NewCondition',
-      areaServed: 'Tucumán, Argentina',
-      seller: {
-        '@type': 'Organization',
-        name: product.empresa?.nombre ?? 'TucuCompras',
-        ...(product.empresa?.sitio_web ? { url: product.empresa.sitio_web } : {}),
-        ...(product.empresa?.direccion ? {
-          address: { '@type': 'PostalAddress', streetAddress: product.empresa.direccion, addressRegion: 'Tucumán', addressCountry: 'AR' },
-        } : {}),
-      },
-    },
-  }
+  const productLd = buildProductLd(product, { withContext: true })
 
   const breadcrumbItems = [
     { name: 'Inicio', href: '/', url: SITE_URL },
@@ -146,18 +121,12 @@ export default async function ProductPage({ params }: { params: Promise<RoutePar
     { name: product.nombre, href: canonicalPath, url: productUrl },
   ]
 
-  const breadcrumbLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: breadcrumbItems.map((b, i) => ({
-      '@type': 'ListItem', position: i + 1, name: b.name, item: b.url,
-    })),
-  }
+  const breadcrumbLd = buildBreadcrumbLd(breadcrumbItems)
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(productLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(breadcrumbLd) }} />
 
       <Navbar />
 

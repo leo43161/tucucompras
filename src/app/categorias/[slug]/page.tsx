@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { CategoryDetailClient } from '@/components/categories/CategoryDetailClient'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { API_BASE_URL, buildImgUrl } from '@/lib/config'
-import { buildProductPath } from '@/lib/utils'
+import { API_BASE_URL } from '@/lib/config'
+import { buildProductLd, buildBreadcrumbLd, WEBSITE_ID, ldScript } from '@/lib/schema'
 import type { CategoriaAPI, ProductoAPI, ProductosFrontResponse } from '@/lib/redux/api/types'
 
 const SITE_URL = 'https://tucucompras.com.ar'
@@ -64,35 +64,43 @@ export default async function CategoriaPage({ params }: { params: Promise<{ slug
   const cat = cats.find((c) => c.slug === slug) ?? null
   const initialProducts: ProductoAPI[] = cat ? await fetchProductsByCategory(cat.id) : []
 
-  const breadcrumbLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: cat?.nombre ?? slug, item: `${SITE_URL}/categorias/${slug}` },
-    ],
-  }
+  const nombre = cat?.nombre ?? slug
+  const categoryUrl = `${SITE_URL}/categorias/${slug}`
 
-  const itemListLd = initialProducts.length > 0 && {
+  const breadcrumbLd = buildBreadcrumbLd([
+    { name: 'Inicio', url: SITE_URL },
+    { name: nombre, url: categoryUrl },
+  ])
+
+  const collectionLd = {
     '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: cat?.nombre ?? slug,
-    numberOfItems: initialProducts.length,
-    itemListElement: initialProducts.slice(0, 20).map((p, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      url: `${SITE_URL}${buildProductPath(p.id, p.nombre)}`,
-      name: p.nombre,
-      image: buildImgUrl(p.imagen_principal_url),
-    })),
+    '@type': 'CollectionPage',
+    '@id': `${categoryUrl}#webpage`,
+    url: categoryUrl,
+    name: `${nombre} en Tucumán`,
+    description: `Productos de ${nombre} en empresas y tiendas locales de Tucumán. Consultá y comprá directo por WhatsApp.`,
+    isPartOf: { '@id': WEBSITE_ID },
+    inLanguage: 'es-AR',
+    ...(initialProducts.length > 0
+      ? {
+          mainEntity: {
+            '@type': 'ItemList',
+            name: nombre,
+            numberOfItems: initialProducts.length,
+            itemListElement: initialProducts.slice(0, 20).map((p, i) => ({
+              '@type': 'ListItem',
+              position: i + 1,
+              item: buildProductLd(p),
+            })),
+          },
+        }
+      : {}),
   }
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      {itemListLd && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
-      )}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(breadcrumbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(collectionLd) }} />
       <Navbar />
       <CategoryDetailClient
         slug={slug}
